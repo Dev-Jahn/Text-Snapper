@@ -35,7 +35,7 @@ public class TessOCRTestActivity extends Activity {
 	public static final String DATA_PATH = Environment
 			.getExternalStorageDirectory().toString() + "/TessOCRTest/";
 	//언어팩(traindata) 이름
-	public static final String lang = "eng";
+	public static final String lang = "kor";
 
 	private static final String TAG = "TessOCRTest.java";
 
@@ -112,7 +112,8 @@ public class TessOCRTestActivity extends Activity {
 	public class ButtonClickHandler implements View.OnClickListener {
 		public void onClick(View view) {
 			Log.v(TAG, "Starting Camera app");
-			startCameraActivity();
+			//startCameraActivity();
+			onPhotoTaken();
 		}
 	}
 
@@ -158,7 +159,7 @@ public class TessOCRTestActivity extends Activity {
 
 	protected void onPhotoTaken() {
 		_taken = true;
-
+		Toast.makeText(this, "OCR Started", Toast.LENGTH_SHORT).show();
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inSampleSize = 4;
 
@@ -228,14 +229,16 @@ public class TessOCRTestActivity extends Activity {
 		if ( lang.equalsIgnoreCase("eng") ) {
 			recognizedText = recognizedText.replaceAll("[^a-zA-Z0-9]+", " ");
 		}
-		
-		recognizedText = recognizedText.trim();
+		/*else if ( lang.equalsIgnoreCase("kor") ) {
+			recognizedText = recognizedText.replaceAll("[^a-zA-Z0-9]+", " ");
+		}*/
+			recognizedText = recognizedText.trim();
 
 		if ( recognizedText.length() != 0 ) {
 			_field.setText(_field.getText().toString().length() == 0 ? recognizedText : _field.getText() + " " + recognizedText);
 			_field.setSelection(_field.getText().toString().length());
 		}
-		
+		Toast.makeText(this, "OCR done", Toast.LENGTH_SHORT).show();
 		// Cycle done.
 	}
 	
