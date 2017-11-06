@@ -112,8 +112,8 @@ public class TessOCRTestActivity extends Activity {
 	public class ButtonClickHandler implements View.OnClickListener {
 		public void onClick(View view) {
 			Log.v(TAG, "Starting Camera app");
-			//startCameraActivity();
-			onPhotoTaken();
+			startCameraActivity();
+			//onPhotoTaken();
 		}
 	}
 
@@ -162,7 +162,7 @@ public class TessOCRTestActivity extends Activity {
 		Toast.makeText(this, "OCR Started", Toast.LENGTH_SHORT).show();
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inSampleSize = 4;
-
+		_path = DATA_PATH + "ocr.jpg";
 		Bitmap bitmap = BitmapFactory.decodeFile(_path, options);
 
 		try {
