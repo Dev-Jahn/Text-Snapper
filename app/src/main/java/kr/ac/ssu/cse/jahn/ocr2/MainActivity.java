@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -57,12 +58,12 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mText = (EditText) findViewById(R.id.field);
+        mText = (EditText) findViewById(R.id.editText);
+        mImageView = (ImageView)findViewById(R.id.imageView);
         mButtonGallery = (Button) findViewById(R.id.gallery);
         mButtonGallery.setOnClickListener(new ButtonClickHandler());
         mButtonCamera = (Button) findViewById(R.id.camera);
         mButtonCamera.setOnClickListener(new ButtonClickHandler());
-
         //권한요청
         request(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         request(Manifest.permission.CAMERA);
@@ -177,16 +178,22 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
+        Bitmap imageBitmap;
         Log.i(TAG, "resultCode: " + resultCode);
         if (resultCode == RESULT_OK)
         {
             switch (requestCode)
             {
             case REQUEST_GALLERY:
+                mPhotoPath = getRealPathFromUri(data.getData());
+                imageBitmap = BitmapFactory.decodeFile(mPhotoPath);
+                mImageView.setImageBitmap(imageBitmap);
+                onPhotoTaken();
                 break;
             case REQUEST_CAMERA:
-                Bitmap imageBitmap = BitmapFactory.decodeFile(mPhotoPath);
+                imageBitmap = BitmapFactory.decodeFile(mPhotoPath);
                 mImageView.setImageBitmap(imageBitmap);
+                onPhotoTaken();
                 break;
             }
         }
@@ -195,7 +202,21 @@ public class MainActivity extends AppCompatActivity
             Log.v(TAG, "User cancelled");
         }
     }
-
+    private String getRealPathFromUri(Uri contentUri)
+    {
+        String result;
+        Cursor cursor = getApplicationContext().getContentResolver().query(contentUri, null, null, null, null);
+        if (cursor == null)
+            result = contentUri.getPath();
+        else
+        {
+            cursor.moveToFirst();
+            int indx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            result = cursor.getString(indx);
+            cursor.close();
+        }
+        return result;
+    }
     @Override
     protected void onSaveInstanceState(Bundle outState)
     {
