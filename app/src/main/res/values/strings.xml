@@ -2,8 +2,10 @@
 <resources>
 
     <string name="hello">Hello World, DatumDroidOCRActivity!</string>
-    <string name="app_name">테스트프로그램</string>
+    <string name="app_name">Text Snapper</string>
     <string name="button_text">사진찍기</string>
     <string name="text_hint">인식된 문자열</string>
+    <string name="progress_ocr">Reading text</string>
+    <string name="error_tess_init">Internal OCR Error. Please reinstall the app or the language data.</string>
 
 </resources>

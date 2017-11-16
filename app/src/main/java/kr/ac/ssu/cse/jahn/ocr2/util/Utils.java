@@ -9,11 +9,11 @@ import java.io.File;
  * Created by CypressRH on 2017-11-16.
  */
 
-public class Util
+public class Utils
 {
     public final static String EXTERNAL_APP_DIRECTORY = "TextSnapper";
     public static String getTessDir(final Context appContext) {
-        String tessDir = PreferencesUtils.getTessDir(appContext);
+        String tessDir = PrefUtils.getTessDir(appContext);
         if (tessDir == null) {
             return new File(Environment.getExternalStorageDirectory(), EXTERNAL_APP_DIRECTORY).getPath() + "/";
         } else {
