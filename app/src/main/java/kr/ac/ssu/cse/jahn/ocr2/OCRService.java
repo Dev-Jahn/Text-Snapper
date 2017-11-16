@@ -9,7 +9,7 @@ import android.util.Log;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
 
-public class TesseractModule extends Service
+public class OCRService extends Service
 {
     private TessBaseAPI mTess;  //OCR 엔진 객체
     Bitmap image;   //인식에 사용할 이미지
@@ -17,7 +17,7 @@ public class TesseractModule extends Service
     String lang = "eng";    // 인식할 언어
 
 
-    public TesseractModule()
+    public OCRService()
     {
     }
     private void processCommand(Intent intent)

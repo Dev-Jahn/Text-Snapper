@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity
     //앱기본폴더 경로
     public static final String DATA_PATH = Environment.getExternalStorageDirectory().toString() + "/TextSnapper/";
     //언어팩(traindata) 이름
-    public static final String LANG = "eng";
+    public static final String LANG = "kor";
     private static final String TAG = "DEBUG";
     protected Button mButtonGallery;
     protected Button mButtonCamera;

@@ -44,7 +44,7 @@
         </provider>
 
         <service
-            android:name=".TesseractModule"
+            android:name=".OCRService"
             android:enabled="true"
             android:exported="true">
         </service>
