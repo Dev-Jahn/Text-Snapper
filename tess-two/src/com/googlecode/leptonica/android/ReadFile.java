@@ -16,11 +16,17 @@
 
 package com.googlecode.leptonica.android;
 
+import com.squareup.picasso.MemoryPolicy;
+import com.squareup.picasso.Picasso;
+
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.util.Log;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Image input and output methods.
@@ -116,15 +122,18 @@ public class ReadFile {
         return nativeReplaceBytes8(pixs.getNativePix(), pixelData, width, 
                 height);
     }
-
+    public static Pix readFile(File file)
+    {
+        return readFile(null, file);
+    }
     /**
      * Creates a Pix object from encoded file data. Supported formats are BMP,
      * JPEG, and PNG.
-     *
+     * @param context context for param of picasso
      * @param file The BMP, JPEG, or PNG-encoded file to read in as a Pix.
      * @return a Pix object
      */
-    public static Pix readFile(File file) {
+    public static Pix readFile(Context context, File file) {
         if (file == null) {
             Log.e(LOG_TAG, "File must be non-null");
             return null;
@@ -138,27 +147,34 @@ public class ReadFile {
             return null;
         }
 
-        final long nativePix = nativeReadFile(file.getAbsolutePath());
-
-        if (nativePix != 0) {
-            return new Pix(nativePix);
-        }
-
-        final BitmapFactory.Options opts = new BitmapFactory.Options();
-        opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
-
-        final Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath(), opts);
-        if (bmp == null) {
-            Log.e(LOG_TAG, "Cannot decode bitmap");
-            return null;
-        }
-        final Pix pix = readBitmap(bmp);
-
-        bmp.recycle();
-
-        return pix;
+        return  loadWithPicasso(context,file);
     }
 
+    public static Pix loadWithPicasso(Context context, File file)
+    {
+        try {
+            final Bitmap bmp = Picasso.with(context).load(file).memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE).get();
+            if (bmp != null) {
+                final Pix pix = readBitmap(bmp);
+                bmp.recycle();
+                return pix;
+            }
+        } catch (IOException ignored) {
+        }
+        return null;
+    }
+    public static Pix loadWithPicasso(Context context, Uri uri) {
+        try {
+            final Bitmap bmp = Picasso.with(context).load(uri).memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE).get();
+            if (bmp != null) {
+                final Pix pix = readBitmap(bmp);
+                bmp.recycle();
+                return pix;
+            }
+        } catch (IOException ignored) {
+        }
+        return null;
+    }
     /**
      * Creates a Pix object from Bitmap data. Currently supports only
      * ARGB_8888-formatted bitmaps.

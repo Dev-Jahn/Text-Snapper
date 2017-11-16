@@ -48,10 +48,10 @@ public class MainActivity extends AppCompatActivity
     protected String mPhotoDirPath;
     protected String mPhotoPath;
     protected boolean _taken;
-    private static final int REQUEST_GALLERY = 101;
-    private static final int REQUEST_CAMERA = 102;
-    private static final String PHOTO_TAKEN = "photo_taken";
+    private static final int REQUEST_CAMERA = 0;
+    private static final int REQUEST_GALLERY = 1;
 
+    private static final String PHOTO_TAKEN = "photo_taken";
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -179,15 +179,19 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
         Bitmap imageBitmap;
+        Uri photoUri;
         Log.i(TAG, "resultCode: " + resultCode);
         if (resultCode == RESULT_OK)
         {
             switch (requestCode)
             {
             case REQUEST_GALLERY:
-                mPhotoPath = getRealPathFromUri(data.getData());
-                imageBitmap = BitmapFactory.decodeFile(mPhotoPath);
-                mImageView.setImageBitmap(imageBitmap);
+                photoUri = data.getData();
+                Intent intent = new Intent(this, OCRService.class);
+                intent.putExtra("photouri",photoUri);
+                intent.putExtra("imagesource", ImageSource.GALLERY);
+                startService(intent);
+                //mImageView.setImageBitmap(imageBitmap);
                 onPhotoTaken();
                 break;
             case REQUEST_CAMERA:
