@@ -5,13 +5,23 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
+import android.support.v4.util.Pair;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Toast;
 
 import com.googlecode.leptonica.android.Pix;
 import com.googlecode.leptonica.android.Pixa;
 
 import java.util.ArrayList;
+
+import static kr.ac.ssu.cse.jahn.ocr2.OCRProcessor.EXTRA_WORD_BOX;
+import static kr.ac.ssu.cse.jahn.ocr2.OCRProcessor.MESSAGE_EXPLANATION_TEXT;
+import static kr.ac.ssu.cse.jahn.ocr2.OCRProcessor.MESSAGE_FINAL_IMAGE;
+import static kr.ac.ssu.cse.jahn.ocr2.OCRProcessor.MESSAGE_LAYOUT_ELEMENTS;
+import static kr.ac.ssu.cse.jahn.ocr2.OCRProcessor.MESSAGE_PREVIEW_IMAGE;
+import static kr.ac.ssu.cse.jahn.ocr2.OCRProcessor.MESSAGE_TESSERACT_PROGRESS;
 
 /**
  * Created by CypressRH on 2017-11-16.
@@ -30,11 +40,11 @@ public class ProgressHandler extends Handler
     public void handleMessage(Message msg) {
         switch (msg.what) {
 
-        case OCR.MESSAGE_EXPLANATION_TEXT: {
+        case MESSAGE_EXPLANATION_TEXT: {
             setToolbarMessage(msg.arg1);
             break;
         }
-        case OCR.MESSAGE_TESSERACT_PROGRESS: {
+        case MESSAGE_TESSERACT_PROGRESS: {
             if (!mHasStartedOcr) {
                 mAnalytics.sendScreenView("Ocr");
                 mHasStartedOcr = true;
@@ -42,17 +52,17 @@ public class ProgressHandler extends Handler
             int percent = msg.arg1;
             Bundle data = msg.getData();
             mImageView.setProgress(percent,
-                    (RectF) data.getParcelable(OCR.EXTRA_WORD_BOX),
-                    (RectF) data.getParcelable(OCR.EXTRA_OCR_BOX));
+                    (RectF) data.getParcelable(EXTRA_WORD_BOX),
+                    (RectF) data.getParcelable(EXTRA_OCR_BOX));
             break;
         }
-        case OCR.MESSAGE_PREVIEW_IMAGE: {
+        case MESSAGE_PREVIEW_IMAGE: {
             mPreviewHeight = ((Bitmap) msg.obj).getHeight();
             mPreviewWith = ((Bitmap) msg.obj).getWidth();
             mImageView.setImageBitmapResetBase((Bitmap) msg.obj, true, 0);
             break;
         }
-        case OCR.MESSAGE_FINAL_IMAGE: {
+        case MESSAGE_FINAL_IMAGE: {
             long nativePix = (long) msg.obj;
 
             if (nativePix != 0) {
@@ -61,7 +71,7 @@ public class ProgressHandler extends Handler
             break;
         }
 
-        case OCR.MESSAGE_LAYOUT_ELEMENTS: {
+        case MESSAGE_LAYOUT_ELEMENTS: {
             Pair<Long, Long> longLongPair = (Pair<Long, Long>) msg.obj;
             long nativePixaText = longLongPair.first;
             long nativePixaImages = longLongPair.second;

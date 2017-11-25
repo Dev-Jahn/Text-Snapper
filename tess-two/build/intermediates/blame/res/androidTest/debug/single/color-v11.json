@@ -1,10 +1,18 @@
 [
     {
+        "merged": "C:\\Users\\ajh50\\Desktop\\Android\\Android-OCR-Floating-App\\tess-two\\build\\intermediates\\res\\merged\\androidTest\\debug\\color-v11\\abc_background_cache_hint_selector_material_light.xml",
+        "source": "C:\\Users\\ajh50\\.android\\build-cache\\70150b057d5697cdb6c6d805064b73932c779a61\\output\\res\\color-v11\\abc_background_cache_hint_selector_material_light.xml"
+    },
+    {
         "merged": "C:\\Users\\CypressRH\\Desktop\\Coding\\Android\\OCR2\\tess-two\\build\\intermediates\\res\\merged\\androidTest\\debug\\color-v11\\abc_background_cache_hint_selector_material_light.xml",
         "source": "C:\\Users\\CypressRH\\.android\\build-cache\\700d54b018923a858e00ebaa3aa936e626378533\\output\\res\\color-v11\\abc_background_cache_hint_selector_material_light.xml"
     },
     {
         "merged": "C:\\Users\\CypressRH\\Desktop\\Coding\\Android\\OCR2\\tess-two\\build\\intermediates\\res\\merged\\androidTest\\debug\\color-v11\\abc_background_cache_hint_selector_material_dark.xml",
         "source": "C:\\Users\\CypressRH\\.android\\build-cache\\700d54b018923a858e00ebaa3aa936e626378533\\output\\res\\color-v11\\abc_background_cache_hint_selector_material_dark.xml"
+    },
+    {
+        "merged": "C:\\Users\\ajh50\\Desktop\\Android\\Android-OCR-Floating-App\\tess-two\\build\\intermediates\\res\\merged\\androidTest\\debug\\color-v11\\abc_background_cache_hint_selector_material_dark.xml",
+        "source": "C:\\Users\\ajh50\\.android\\build-cache\\70150b057d5697cdb6c6d805064b73932c779a61\\output\\res\\color-v11\\abc_background_cache_hint_selector_material_dark.xml"
     }
 ]

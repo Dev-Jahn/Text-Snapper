@@ -2,7 +2,6 @@ package kr.ac.ssu.cse.jahn.ocr2;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Message;
@@ -12,14 +11,12 @@ import android.util.Log;
 
 import com.googlecode.leptonica.android.Pix;
 import com.googlecode.tesseract.android.TessBaseAPI;
+import com.googlecode.tesseract.android.TessBaseAPI.PageSegMode;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import kr.ac.ssu.cse.jahn.ocr2.util.Utils;
-
-import static android.R.attr.left;
-import static android.R.attr.right;
 
 /**
  * Created by CypressRH on 2017-11-16.
@@ -126,7 +123,6 @@ public class OCRProcessor implements TessBaseAPI.ProgressNotifier
     {
         if (mIsProcessorStarted && !mStopped)
         {
-
             Message m = Message.obtain();
             m.what = what;
             m.arg1 = arg1;
@@ -161,8 +157,8 @@ public class OCRProcessor implements TessBaseAPI.ProgressNotifier
                 try
                 {
                     final String tessDir = Utils.getTessDir(context);
-
                     long nativeTextPix = textpix.getNativePix();
+                    Pix pixText = new Pix(nativeTextPix);
                     mOriginalHeight = textpix.getHeight();
                     mOriginalWidth = textpix.getWidth();
                     sendMessage(MESSAGE_EXPLANATION_TEXT, R.string.progress_ocr);
@@ -196,7 +192,7 @@ public class OCRProcessor implements TessBaseAPI.ProgressNotifier
                     {
                         if (mStopped)
                             return;
-                        String htmlText = mTess.getHtmlText();
+                        String htmlText = mTess.getUTF8Text();
                         if (accuracy == 95)
                             accuracy = 0;
 
@@ -230,5 +226,16 @@ public class OCRProcessor implements TessBaseAPI.ProgressNotifier
         mStopped = true;
     }
 
+    private int determineOcrMode(String lang)
+    {
+        return TessBaseAPI.OEM_TESSERACT_ONLY;
+    }
 
+    /*
+    * 추후 다중언어 지원을 위한 메소드
+     */
+    private String determineOcrLanguage(String ocrLanguage)
+    {
+            return ocrLanguage;
+    }
 }
