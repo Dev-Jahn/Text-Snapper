@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity
     //앱기본폴더 경로
     public static final String DATA_PATH = Environment.getExternalStorageDirectory().toString() + "/TextSnapper/";
     //언어팩(traindata) 이름
-    public static final String LANG = "kor";
+    public static final String LANG = "eng";
     private static final String TAG = "DEBUG";
     protected Button mButtonGallery;
     protected Button mButtonCamera;
@@ -68,6 +68,9 @@ public class MainActivity extends AppCompatActivity
         request(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         request(Manifest.permission.CAMERA);
 
+        /*
+         앱 폴더 생성
+         */
         mPhotoDirPath = DATA_PATH + "photo/";
         String[] paths = new String[] { DATA_PATH, DATA_PATH + "tessdata/", DATA_PATH + "photo/" };
         for (String path : paths)
@@ -188,11 +191,10 @@ public class MainActivity extends AppCompatActivity
             case REQUEST_GALLERY:
                 photoUri = data.getData();
                 Intent intent = new Intent(this, OCRService.class);
-                intent.putExtra("photouri",photoUri);
+                intent.setDataAndType(photoUri,"image/*");
                 intent.putExtra("imagesource", ImageSource.GALLERY);
                 startService(intent);
                 //mImageView.setImageBitmap(imageBitmap);
-                onPhotoTaken();
                 break;
             case REQUEST_CAMERA:
                 imageBitmap = BitmapFactory.decodeFile(mPhotoPath);

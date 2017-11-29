@@ -58,23 +58,44 @@ public class OCRService extends Service
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId)
+    public int onStartCommand(final Intent intent, int flags, int startId)
     {
         if(intent==null)
+        {
+            Log.e("TAG","intent is null");
             return Service.START_NOT_STICKY;
+        }
         else
-            processCommand(intent);
+        {
+            new Thread()
+            {
+                @Override
+                public void run()
+                {
+                    processCommand(intent);
+                }
+            };
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
     private void processCommand(Intent intent)
     {
-
-        photoUri = (Uri)intent.getParcelableExtra("photouri");
+        for (int i=0; i<5;i++)
+        {
+            Log.e("TAG",String.valueOf(i));
+            try
+            {
+                Thread.sleep(2000);
+            }
+            catch (Exception e){}
+        }
+        photoUri = intent.getData();
         if (photoUri==null)
             Log.e(TAG,"can't get parcelable from intent");
         if (mImageLoadTask!=null)
             mImageLoadTask.cancel(true);
+        //CROP에서 왔으면 skip. 아니면 skipcrop=0
         final boolean skipCrop = intent.getSerializableExtra("imagesource")==ImageSource.CROP;
 
         registerImageLoaderReceiver();
