@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/textTesseractTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tesseract OCR Library"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="100dp"
+        android:layout_gravity="center"/>
+
+    <TextView
+        android:id="@+id/textTesseractDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textTesseractTitle"
+        android:layout_centerHorizontal="true"
+        android:text="Tesseract OCR Library를 이용하였습니다."
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/textTranslatorTitle"
+        android:layout_marginTop="32dp"
+        android:layout_below="@id/textTesseractDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="Naver papago Translator"
+        android:textStyle="bold"
+        android:textSize="24sp"
+        android:layout_gravity="center"/>
+
+    <TextView
+        android:id="@+id/textTranslatorDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textTranslatorTitle"
+        android:layout_centerHorizontal="true"
+        android:text="Papago Neural Machine Translator를\n이용하였습니다."
+        android:textSize="16sp" />
+
+</RelativeLayout>

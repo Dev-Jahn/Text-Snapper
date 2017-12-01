@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="array_ocr">
+        <item>English</item>
+        <item>한국어</item>
+    </string-array>
+
+    <string-array name="array_about">
+        <item>Open Source Information</item>
+        <item>제작자 정보</item>
+    </string-array>
+</resources>

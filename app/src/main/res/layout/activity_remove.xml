@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/removeHead">
+
+    <!-- remove circle 이미지 소스를 못구하는 중.. -->
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:id="@+id/removeImage"
+        android:src="@drawable/floating_remove"/>
+
+</RelativeLayout>

@@ -2,21 +2,23 @@
 <resources>
 
     <string name="app_name">Text Snapper</string>
-<string name="button_text">사진찍기</string>
-<string name="text_hint">인식된 문자열</string>
-<string name="progress_ocr">Reading text</string>
-<string name="error_tess_init">Internal OCR Error. Please reinstall the app or the language data.</string>
-
-<string name="image_could_not_be_read">The image was not found in the data sent.</string>
-<string name="image_does_not_exist">The image was not found on your phone.</string>
-<string name="camera_app_not_found">Camera app not found.</string>
-<string name="gallery_io_error">Image could not be loaded.</string>
-<string name="media_store_returned_null">Gallery returned no image to me.</string>
-<string name="camera_app_error">Camera app error.</string>
-<string name="camera_no_image_returned">Camera app returned no image.</string>
-<string name="error_could_not_take_photo">Sorry, I could not read the photo</string>
-<string name="error_title">Error</string>
-<string name="image_not_32_bit">Image needs to be 32 bit.</string>
-<string name="image_format_unsupported">Image format not recognized. Only png or jpeg files are currently supported.</string>
-
+    <string name="button_text">사진찍기</string>
+    <string name="text_hint">인식된 문자열</string>
+    <string name="progress_ocr">Reading text</string>
+    <string name="error_tess_init">Internal OCR Error. Please reinstall the app or the language data.</string>
+    <string name="image_could_not_be_read">The image was not found in the data sent.</string>
+    <string name="image_does_not_exist">The image was not found on your phone.</string>
+    <string name="camera_app_not_found">Camera app not found.</string>
+    <string name="gallery_io_error">Image could not be loaded.</string>
+    <string name="media_store_returned_null">Gallery returned no image to me.</string>
+    <string name="camera_app_error">Camera app error.</string>
+    <string name="camera_no_image_returned">Camera app returned no image.</string>
+    <string name="error_could_not_take_photo">Sorry, I could not read the photo</string>
+    <string name="error_title">Error</string>
+    <string name="image_not_32_bit">Image needs to be 32 bit.</string>
+    <string name="image_format_unsupported">Image format not recognized. Only png or jpeg files are currently supported.</string>
+    <string name="recent_files">Recent Files..</string>
+    <string name="menus">Menus..</string>
+    <string name="drawer_open">DRAWER_OPEN</string>
+    <string name="drawer_close">DRAWER_CLOSE</string>
 </resources>

@@ -4,7 +4,7 @@ android {
     compileSdkVersion 25
     buildToolsVersion "26.0.2"
     defaultConfig {
-        applicationId "kr.ac.ssu.cse.jahn.ocr2"
+        applicationId "kr.ac.ssu.cse.jahn.textsnapper"
         minSdkVersion 15
         targetSdkVersion 25
         versionCode 1

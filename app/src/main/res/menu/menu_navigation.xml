@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/navigation_guide"
+            android:checked="true"
+            android:icon="@drawable/image_tutorial"
+            android:title="사용자 가이드"/>
+        <item
+            android:id="@+id/navigation_about"
+            android:checked="true"
+            android:icon="@drawable/image_about"
+            android:title="About"/>
+    </group>
+    <item android:title="기능">
+        <menu>
+            <item
+                android:id="@+id/navigation_favorite"
+                android:icon="@drawable/image_favorite"
+                android:title="즐겨찾기"/>
+            <item
+                android:id="@+id/navigation_config"
+                android:icon="@drawable/config_icon"
+                android:title="설정"/>
+        </menu>
+    </item>
+</menu>
