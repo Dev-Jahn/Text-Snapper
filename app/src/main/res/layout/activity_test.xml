@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="kr.ac.ssu.cse.jahn.textsnapper.OCR.MainActivity">
+    tools:context="kr.ac.ssu.cse.jahn.textsnapper.ocr.MainActivity">
 
     <ImageView
         android:id="@+id/imageView"

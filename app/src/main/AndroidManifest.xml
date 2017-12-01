@@ -22,7 +22,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".UI.MainActivity"
+            android:name=".ui.MainActivity"
             android:configChanges="orientation|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -31,28 +31,28 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".OCR.CropActivity">
+        <activity android:name=".ocr.CropActivity">
         </activity>
 
-        <activity android:name=".UI.ConfigActivity">
+        <activity android:name=".ui.ConfigActivity">
         </activity>
 
-        <activity android:name=".UI.AboutActivity">
+        <activity android:name=".ui.AboutActivity">
         </activity>
 
-        <activity android:name=".UI.OpenSourceActivity">
+        <activity android:name=".ui.OpenSourceActivity">
         </activity>
 
-        <activity android:name=".UI.MakerActivity">
+        <activity android:name=".ui.MakerActivity">
         </activity>
 
         <service
-            android:name=".OCR.OCRService"
+            android:name=".ocr.OCRService"
             android:enabled="true"
             android:exported="true">
         </service>
 
-        <service android:name=".UI.FloatingService">
+        <service android:name=".ui.FloatingService">
         </service>
 
         <provider
