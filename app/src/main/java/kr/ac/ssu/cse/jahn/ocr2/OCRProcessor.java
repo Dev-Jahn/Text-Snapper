@@ -51,6 +51,7 @@ public class OCRProcessor implements TessBaseAPI.ProgressNotifier
 
     public OCRProcessor(final Messenger messenger)
     {
+        mMessenger = messenger;
         mIsProcessorStarted = true;
     }
 
@@ -83,35 +84,23 @@ public class OCRProcessor implements TessBaseAPI.ProgressNotifier
         sendMessage(what, 0, 0, null, null);
     }
 
-    private void sendMessage(int what, int arg1, int arg2)
-    {
-        sendMessage(what, arg1, arg2, null, null);
-    }
+    private void sendMessage(int what, int arg1, int arg2) { sendMessage(what, arg1, arg2, null, null); }
 
     private void sendMessage(int what, String string)
     {
         sendMessage(what, 0, 0, string, null);
     }
 
-    private void sendMessage(int what, String string, int accuracy)
-    {
-        sendMessage(what, accuracy, 0, string, null);
-    }
+    private void sendMessage(int what, String string, int accuracy) { sendMessage(what, accuracy, 0, string, null); }
 
-    private void sendMessage(int what, long nativeTextPix)
-    {
-        sendMessage(what, 0, 0, nativeTextPix, null);
-    }
+    private void sendMessage(int what, long nativeTextPix)    {        sendMessage(what, 0, 0, nativeTextPix, null);    }
 
     private void sendMessage(int what, int arg1)
     {
         sendMessage(what, arg1, 0, null, null);
     }
 
-    private void sendMessage(int what, Bitmap previewBitmap)
-    {
-        sendMessage(what, 0, 0, previewBitmap, null);
-    }
+    private void sendMessage(int what, Bitmap previewBitmap)    {        sendMessage(what, 0, 0, previewBitmap, null);    }
 
 
     private void sendMessage(int what, int arg1, Bundle b)

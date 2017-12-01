@@ -74,32 +74,27 @@ public class OCRService extends Service
                 {
                     processCommand(intent);
                 }
-            };
+            }.start();
         }
         return super.onStartCommand(intent, flags, startId);
     }
 
     private void processCommand(Intent intent)
     {
-        for (int i=0; i<5;i++)
-        {
-            Log.e("TAG",String.valueOf(i));
-            try
-            {
-                Thread.sleep(2000);
-            }
-            catch (Exception e){}
-        }
+        Log.e(TAG, "processCommand()");
+
         photoUri = intent.getData();
         if (photoUri==null)
             Log.e(TAG,"can't get parcelable from intent");
         if (mImageLoadTask!=null)
             mImageLoadTask.cancel(true);
-        //CROP에서 왔으면 skip. 아니면 skipcrop=0
-        final boolean skipCrop = intent.getSerializableExtra("imagesource")==ImageSource.CROP;
+        //CROP에서 왔으면 skip. 아니면 skipcrop=false
+        final boolean skipCrop = true;  //테스트
+                //intent.getSerializableExtra("imagesource")==ImageSource.CROP;
 
-        registerImageLoaderReceiver();
+        registerImageLoadReceiver();
         mImageLoadTask = new ImageLoadAsyncTask(this, skipCrop, photoUri);
+        mImageLoadTask.execute();
     }
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver()
     {
@@ -108,10 +103,10 @@ public class OCRService extends Service
         {
             if (mReceiverRegistered)
             {
-                Log.i(TAG, "onReceive " + OCRService.this);
+                Log.e(TAG, "onReceive " + OCRService.this);
                 if (intent.getAction().equalsIgnoreCase(ImageLoadAsyncTask.ACTION_IMAGE_LOADED))
                 {
-                    unRegisterImageLoadedReceiver();
+                    unRegisterImageLoadReceiver();
                     final long nativePix = intent.getLongExtra(ImageLoadAsyncTask.EXTRA_PIX, 0);
                     final int statusNumber = intent.getIntExtra(ImageLoadAsyncTask.EXTRA_STATUS, PixLoadStatus.SUCCESS.ordinal());
                     final boolean skipCrop = intent.getBooleanExtra(ImageLoadAsyncTask.EXTRA_SKIP_CROP, false);
@@ -121,21 +116,21 @@ public class OCRService extends Service
         }
     };
 
-    private synchronized void unRegisterImageLoadedReceiver()
+    private synchronized void unRegisterImageLoadReceiver()
     {
         if (mReceiverRegistered)
         {
-            Log.i(TAG, "unRegisterImageLoadedReceiver " + mMessageReceiver);
+            Log.e(TAG, "unRegisterImageLoadReceiver " + mMessageReceiver);
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
             mReceiverRegistered = false;
         }
     }
     
-    private synchronized void registerImageLoaderReceiver()
+    private synchronized void registerImageLoadReceiver()
     {
         if (!mReceiverRegistered)
         {
-            Log.i(TAG, "registerImageLoaderReceiver " + mMessageReceiver);
+            Log.e(TAG, "registerImageLoadReceiver " + mMessageReceiver);
             final IntentFilter intentFilter = new IntentFilter(ImageLoadAsyncTask.ACTION_IMAGE_LOADED);
             intentFilter.addAction(ImageLoadAsyncTask.ACTION_IMAGE_LOADING_START);
             LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, intentFilter);
@@ -149,11 +144,13 @@ public class OCRService extends Service
         {
             if (skipCrop)
             {
+                Log.e("TAG", "Crop skipped");
                 final Pix pix = new Pix(nativePix);
                 mProcessor.doOCR(getApplicationContext(), lang, pix);
             }
             else
             {
+                Log.e("TAG", "To CropActivity");
                 Intent actionIntent = new Intent(this, CropActivity.class);
                 actionIntent.putExtra(EXTRA_NATIVE_PIX, nativePix);
                 //결과 확인 불가하므로 액티비티 에서 종료시 브로드캐스트 송신
@@ -225,8 +222,13 @@ public class OCRService extends Service
     @Override
     public IBinder onBind(Intent intent)
     {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+        return null;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent)
+    {
+        return super.onUnbind(intent);
     }
 
     public class ProgressHandler extends Handler
@@ -280,6 +282,7 @@ public class OCRService extends Service
             }
             case MESSAGE_UTF8_TEXT: {
                 this.utf8String = (String) msg.obj;
+                Toast.makeText(OCRService.this, this.utf8String, Toast.LENGTH_SHORT).show();
                 break;
             }
             case MESSAGE_END: {
