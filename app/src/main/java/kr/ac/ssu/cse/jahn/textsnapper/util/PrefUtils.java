@@ -12,9 +12,7 @@ public class PrefUtils
     public final static String PREFERENCES_ALIGNMENT_KEY = "text_alignment";
     public final static String PREFERENCES_TEXT_SIZE_KEY = "text_size";
     private final static String PREFERENCES_TRAINING_DATA_DIR = "training_data_dir";
-
     public final static String PREFERENCES_OCR_LANG = "ocr_language";
-
     public final static String PREFERENCES_KEY = "text_preferences";
 
     public static SharedPreferences getPreferences(Context applicationContext)

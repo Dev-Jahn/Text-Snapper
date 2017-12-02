@@ -62,13 +62,12 @@ public class MainActivity extends AppCompatActivity
 
         mText = (EditText) findViewById(R.id.editText);
         mImageView = (ImageView)findViewById(R.id.imageView);
-        mButtonGallery = (Button) findViewById(R.id.gallery);
+        //mButtonGallery = (Button) findViewById(R.id.gallery);
         mButtonGallery.setOnClickListener(new ButtonClickHandler());
-        mButtonCamera = (Button) findViewById(R.id.camera);
+        //mButtonCamera = (Button) findViewById(R.id.camera);
         mButtonCamera.setOnClickListener(new ButtonClickHandler());
         //권한요청
-        request(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        request(Manifest.permission.CAMERA);
+        request(Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
 
         /*
          앱 폴더 생성
@@ -95,7 +94,6 @@ public class MainActivity extends AppCompatActivity
         {
             try
             {
-
                 AssetManager assetManager = getAssets();
                 InputStream in = assetManager.open("tessdata/" + LANG + ".traineddata");
                 //GZIPInputStream gin = new GZIPInputStream(in);
@@ -126,7 +124,7 @@ public class MainActivity extends AppCompatActivity
     {
         public void onClick(View view)
         {
-            switch (view.getId())
+            /*switch (view.getId())
             {
             case R.id.gallery:
                 fromGallery();
@@ -134,7 +132,7 @@ public class MainActivity extends AppCompatActivity
             case R.id.camera:
                 fromCamera();
                 break;
-            }
+            }*/
         }
     }
     private void fromGallery()
@@ -332,32 +330,39 @@ public class MainActivity extends AppCompatActivity
         // Cycle done.
     }
 
-    public void request(String permission)
+    public void request(String... permissions)
     {
-        int permissionCheck = ContextCompat.checkSelfPermission(this, permission);
-        if (permissionCheck == PackageManager.PERMISSION_GRANTED)
-            Log.v("TAG","권한있음");
-        else
+        //모든 권한이 있는지 확인
+        int permissionCheck = PackageManager.PERMISSION_GRANTED;
+        for(String permission:permissions)
         {
-            Log.v("TAG","권한없음");
-            if(ActivityCompat.shouldShowRequestPermissionRationale(this, permission))
-                Log.v("TAG","권한설명필요");
-
+            if(ContextCompat.checkSelfPermission(this, permission)==PackageManager.PERMISSION_GRANTED)
+                Log.v("TAG",permission+"권한 있음");
             else
-                ActivityCompat.requestPermissions(this,new String[] {permission},1);
+            {
+                if(ActivityCompat.shouldShowRequestPermissionRationale(this, permission))
+                {
+                    Log.v("TAG", permission + "권한 설명필요");
+                }
+                else
+                {
+                    ActivityCompat.requestPermissions(this, permissions, 1);
+                    Log.v("TAG",permission+"권한 있음");
+                }
+            }
         }
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
     {
-        switch (requestCode)
+        if (grantResults.length <= 0)
+            return;
+        for(int i = 0; i<grantResults.length; i++)
         {
-        case 1:
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                Toast.makeText(this, "권한 승인됨", Toast.LENGTH_SHORT).show();
+            if (grantResults[i] == PackageManager.PERMISSION_GRANTED)
+                Log.v("TAG",permissions[i]+"권한 승인");
             else
-                Toast.makeText(this, "권한 거부됨", Toast.LENGTH_SHORT).show();
-        return;
+                Log.v("TAG",permissions[i]+"권한 거부");
         }
     }
 }

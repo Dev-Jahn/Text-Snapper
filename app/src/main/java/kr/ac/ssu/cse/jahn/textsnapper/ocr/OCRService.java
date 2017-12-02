@@ -82,8 +82,7 @@ public class OCRService extends Service
         if (mImageLoadTask!=null)
             mImageLoadTask.cancel(true);
         //CROP에서 왔으면 skip. 아니면 skipcrop=false
-        final boolean skipCrop = true;  //테스트
-                //intent.getSerializableExtra("imagesource")==ImageSource.CROP;
+        final boolean skipCrop = intent.getSerializableExtra("imagesource")==ImageSource.CROP;
 
         registerImageLoadReceiver();
         mImageLoadTask = new ImageLoadAsyncTask(this, skipCrop, photoUri);
@@ -215,12 +214,14 @@ public class OCRService extends Service
     @Override
     public IBinder onBind(Intent intent)
     {
+        Log.e(TAG, "OCR Service binded");
         return null;
     }
 
     @Override
     public boolean onUnbind(Intent intent)
     {
+        Log.e(TAG, "OCR Service unbinded");
         return super.onUnbind(intent);
     }
 
