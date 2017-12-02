@@ -104,7 +104,7 @@ public class FloatingService extends Service {
             int marginY;
             int removeImageWidth;
             int removeImageHeight;
-
+            //Handler
             Handler longHandler = new Handler();
             Runnable longRunnable = new Runnable() {
                 @Override
