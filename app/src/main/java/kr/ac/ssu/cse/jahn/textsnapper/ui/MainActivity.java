@@ -37,7 +37,6 @@ import java.util.Date;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.ImageSource;
-import kr.ac.ssu.cse.jahn.textsnapper.ocr.OCRService;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
 import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.DATA_PATH;
@@ -422,10 +421,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case REQUEST_CROP:
                 Log.e("TAG","onActivityResult():REQUEST_CROP");
-                Intent intent = new Intent(this, OCRService.class);
-                intent.setDataAndType(photoUri,"image/*");
-                intent.putExtra("imagesource", ImageSource.GALLERY);
-                startService(intent);
+                Intent result = new Intent(this, TestActivity.class);
+                result.setDataAndType(photoUri,"image/*");
+                result.putExtra("imagesource", ImageSource.CROP);
+                startActivity(result);
+
                 break;
             }
         }

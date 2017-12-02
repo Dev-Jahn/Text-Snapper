@@ -62,9 +62,9 @@ public class MainActivity extends AppCompatActivity
 
         mText = (EditText) findViewById(R.id.editText);
         mImageView = (ImageView)findViewById(R.id.imageView);
-        mButtonGallery = (Button) findViewById(R.id.gallery);
+        //mButtonGallery = (Button) findViewById(R.id.gallery);
         mButtonGallery.setOnClickListener(new ButtonClickHandler());
-        mButtonCamera = (Button) findViewById(R.id.camera);
+        //mButtonCamera = (Button) findViewById(R.id.camera);
         mButtonCamera.setOnClickListener(new ButtonClickHandler());
         //권한요청
         request(Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity
     {
         public void onClick(View view)
         {
-            switch (view.getId())
+            /*switch (view.getId())
             {
             case R.id.gallery:
                 fromGallery();
@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity
             case R.id.camera:
                 fromCamera();
                 break;
-            }
+            }*/
         }
     }
     private void fromGallery()

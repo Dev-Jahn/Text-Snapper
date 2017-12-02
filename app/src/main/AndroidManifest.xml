@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.FLASHLIGHT"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -30,19 +30,14 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
         <activity android:name=".ocr.CropActivity">
         </activity>
-
         <activity android:name=".ui.ConfigActivity">
         </activity>
-
         <activity android:name=".ui.AboutActivity">
         </activity>
-
         <activity android:name=".ui.OpenSourceActivity">
         </activity>
-
         <activity android:name=".ui.MakerActivity">
         </activity>
 
@@ -51,7 +46,6 @@
             android:enabled="true"
             android:exported="true">
         </service>
-
         <service android:name=".ui.FloatingService">
         </service>
 
@@ -64,5 +58,9 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths"/>
         </provider>
+
+        <activity android:name=".ui.TestActivity">
+        </activity>
     </application>
+
 </manifest>

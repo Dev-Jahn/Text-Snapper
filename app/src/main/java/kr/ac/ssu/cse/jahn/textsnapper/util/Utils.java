@@ -24,7 +24,7 @@ import java.io.OutputStream;
 public class Utils {
     public final static String TAG = Utils.class.getSimpleName();
     public static final String DATA_PATH = Environment.getExternalStorageDirectory().toString() + "/TextSnapper/";
-
+    public final static String EXTERNAL_APP_DIRECTORY = "TextSnapper";
     //오버레이 권한 확인
     public static boolean canDrawOverlays(Context context){
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -51,7 +51,7 @@ public class Utils {
                 else
                 {
                     ActivityCompat.requestPermissions(context, permissions, 1);
-                    Log.v("TAG",permission+"권한 있음");
+                    Log.v("TAG",permission+"권한 요청");
                 }
             }
         }
