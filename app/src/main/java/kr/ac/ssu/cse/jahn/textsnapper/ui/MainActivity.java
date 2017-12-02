@@ -1,44 +1,77 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ui;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import kr.ac.ssu.cse.jahn.textsnapper.R;
+import kr.ac.ssu.cse.jahn.textsnapper.ocr.ImageSource;
+import kr.ac.ssu.cse.jahn.textsnapper.ocr.OCRService;
+import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
+
+import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.DATA_PATH;
+import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.copyTessdata;
 
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
-    ActionBarDrawerToggle toggle;
-    ViewPager viewPager;
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+
+    private static final int REQUEST_CAMERA = 0;
+    private static final int REQUEST_GALLERY = 1;
+    private static final int REQUEST_CROP = 2;
 
     // Floating Action Button Overlay를 위한 요청 코드
     public static int PERMISSION_REQUEST_CODE_FLOATING_BUTTON = 1234;
+    private static final String TAG = "Mainactivity";
+    private static final String[] LANGS = {"eng", "kor"};
+    protected String mPhotoDirPath = DATA_PATH + "photo/";
+    protected String mPhotoPath;
+    ActionBarDrawerToggle toggle;
+    ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //권한요청
+        Utils.request(this, Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
+        //디렉토리 생성
+        Utils.makeAppDir();
+        //파일복사
+        copyTessdata(getAssets(),LANGS);
+
 
         /**
          * DrawerLayout ==> 좌상단 메뉴버튼 클릭하면 나오는 버튼을 위한 코드
@@ -87,14 +120,74 @@ public class MainActivity extends AppCompatActivity
         imageGallery.setOnTouchListener(imageClickEventListener);
         imageWidget.setOnTouchListener(floatingButtonEventListener);
 
-        viewPager = (ViewPager)findViewById(R.id.viewPager);
+        imageGallery.setOnClickListener(new ButtonClickHandler());
+
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
         viewPager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
 
         TabLayout tabLayout = (TabLayout)findViewById(R.id.tabLayout);
         tabLayout.setupWithViewPager(viewPager);
         tabLayout.addOnTabSelectedListener(tabSelectedListener);
     }
+    public class ButtonClickHandler implements View.OnClickListener
+    {
+        public void onClick(View view)
+        {
+            switch (view.getId())
+            {
+            case R.id.imageGallery:
+                fromGallery();
+                break;
+            case R.id.imageCamera:
+                fromCamera();
+                break;
+            }
+        }
+    }
+    private void fromGallery()
+    {
+        Log.e("TAG", "fromGallery()");
+        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, REQUEST_GALLERY);
+    }
 
+    private void fromCamera()
+    {
+        File photoFile = createImageFile();
+        //파일프로바이더 사용
+        Uri outputFileUri = FileProvider.getUriForFile(getApplicationContext(), getPackageName()+".provider",photoFile);
+
+        final Intent takePic = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        takePic.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
+        takePic.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        if (takePic.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePic, REQUEST_CAMERA);
+        }
+    }
+    private File createImageFile()
+    {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = new File(mPhotoDirPath);
+        File image;
+        try
+        {
+            image = File.createTempFile(
+                    imageFileName,  /* prefix */
+                    ".jpg",         /* suffix */
+                    storageDir      /* directory */
+            );
+        }
+        catch (IOException e)
+        {
+            image=null;
+            Log.e("TAG","Can't create TempFile");
+        }
+        // Save a file: path for use with ACTION_VIEW intents
+        mPhotoPath = image.getAbsolutePath();
+        return image;
+    }
     /**
      * 버튼을 눌렀을 때 선택되었음을 보여주도록
      */
@@ -252,7 +345,19 @@ public class MainActivity extends AppCompatActivity
          stopService(intent);
 */
     }
-
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+    {
+        if (grantResults.length <= 0)
+            return;
+        for(int i = 0; i<grantResults.length; i++)
+        {
+            if (grantResults[i] == PackageManager.PERMISSION_GRANTED)
+                Log.v("TAG",permissions[i]+"권한 승인");
+            else
+                Log.v("TAG",permissions[i]+"권한 거부");
+        }
+    }
     /**
      * Floating Button을 위해서는 Overlay Permission을 반드시 얻어야 함
      **/
@@ -286,6 +391,10 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        Bitmap imageBitmap;
+        Uri photoUri;
+        Log.i(TAG, "resultCode: " + resultCode);
+
         if (requestCode == PERMISSION_REQUEST_CODE_FLOATING_BUTTON) {
             if (!Utils.canDrawOverlays(this)) {
                 needPermissionDialog(requestCode);
@@ -293,5 +402,40 @@ public class MainActivity extends AppCompatActivity
                 startFloatingHead();
             }
         }
+
+        if (resultCode == RESULT_OK)
+        {
+            photoUri = data.getData();
+            switch (requestCode)
+            {
+            case REQUEST_GALLERY:
+                Intent editIntent = new Intent(Intent.ACTION_EDIT);
+                editIntent.setDataAndType(photoUri, "image/*");
+                editIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivityForResult(Intent.createChooser(editIntent, null),REQUEST_CROP);
+
+                //mImageView.setImageBitmap(imageBitmap);
+                break;
+            case REQUEST_CAMERA:
+                imageBitmap = BitmapFactory.decodeFile(mPhotoPath);
+                //onPhotoTaken();
+                break;
+            case REQUEST_CROP:
+                Log.e("TAG","onActivityResult():REQUEST_CROP");
+                Intent intent = new Intent(this, OCRService.class);
+                intent.setDataAndType(photoUri,"image/*");
+                intent.putExtra("imagesource", ImageSource.GALLERY);
+                startService(intent);
+                break;
+            }
+        }
+        else
+        {
+            Log.v(TAG, "User cancelled");
+        }
+
+
+        //크롭
+
     }
 }
