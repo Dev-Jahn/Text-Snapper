@@ -14,7 +14,6 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -34,6 +33,7 @@ public class MainActivity extends AppCompatActivity
 
     // Floating Action Button Overlay를 위한 요청 코드
     public static int PERMISSION_REQUEST_CODE_FLOATING_BUTTON = 1234;
+    public static int PERMISSION_REQUEST_CODE_FLOATING_BAR = 5678;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +59,6 @@ public class MainActivity extends AppCompatActivity
             }
         };
         drawer.addDrawerListener(toggle);
-        ActionBar debugvar = getSupportActionBar();
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         toggle.syncState();
@@ -100,7 +99,6 @@ public class MainActivity extends AppCompatActivity
      * 버튼을 눌렀을 때 선택되었음을 보여주도록
      */
     ImageView.OnTouchListener imageClickEventListener = new ImageView.OnTouchListener() {
-
         @Override
         public boolean onTouch(View v, MotionEvent event) {
 
@@ -122,7 +120,6 @@ public class MainActivity extends AppCompatActivity
                     break;
                 }
             }
-
             return false;
         }
     };
@@ -137,9 +134,20 @@ public class MainActivity extends AppCompatActivity
         public void onClick(View v) {
             if(Utils.canDrawOverlays(MainActivity.this)) {
                 startFloatingHead();
-            }
-            else{
+            } else{
                 requestPermission(PERMISSION_REQUEST_CODE_FLOATING_BUTTON);
+            }
+        }
+    };
+
+    ImageView.OnClickListener floatingBarEventListener = new ImageView.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+            if(Utils.canDrawOverlays(MainActivity.this)) {
+
+            } else {
+              requestPermission(PERMISSION_REQUEST_CODE_FLOATING_BAR);
             }
         }
     };
@@ -227,12 +235,6 @@ public class MainActivity extends AppCompatActivity
     private void startFloatingHead() {
         Intent intent = new Intent(getApplicationContext(), FloatingService.class);
         startService(intent);
-/**
-     //    * 이 테스트 코드는 의미없이 죽어버리는 WindowManger Addview를 Test하는 겁니다
-    //    * RIP!
-         Toast.makeText(this,"Yeah!!",Toast.LENGTH_LONG).show();
-         stopService(intent);
-*/
     }
 
     /**
