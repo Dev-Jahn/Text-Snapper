@@ -25,6 +25,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 
@@ -620,7 +621,7 @@ public class FloatingService extends Service {
         FileObserver fileObserver = new FileObserver(path, FileObserver.CREATE) {
             @Override
             public void onEvent(int event, String path) {
-                Log.e(TAG, "event detected");
+                Toast.makeText(FloatingService.this, "스크린샷저장이 감지되었습니다", Toast.LENGTH_SHORT).show();
             }
         };
         Log.e(TAG,"FileObserver started watching");
