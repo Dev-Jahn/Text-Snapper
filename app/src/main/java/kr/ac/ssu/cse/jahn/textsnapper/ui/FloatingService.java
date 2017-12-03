@@ -637,6 +637,7 @@ public class FloatingService extends Service {
         startForeground(FOREGROUND_ID, notification);
 
         setFileObserver();
+
         if (startId == Service.START_STICKY) {
             handleStart();
             return super.onStartCommand(intent, flags, startId);
