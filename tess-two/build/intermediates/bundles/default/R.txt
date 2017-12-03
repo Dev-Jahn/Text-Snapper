@@ -536,7 +536,7 @@ int id action_mode_bar 0x7f0a0044
 int id action_mode_bar_stub 0x7f0a0043
 int id action_mode_close_button 0x7f0a0026
 int id action_text 0x7f0a0058
-int id actions 0x7f0a0066
+int id actions 0x7f0a0065
 int id activity_chooser_view_content 0x7f0a0027
 int id add 0x7f0a0013
 int id alertTitle 0x7f0a003b
@@ -562,7 +562,7 @@ int id expanded_menu 0x7f0a003d
 int id home 0x7f0a0004
 int id homeAsUp 0x7f0a000d
 int id icon 0x7f0a002c
-int id icon_group 0x7f0a0067
+int id icon_group 0x7f0a0066
 int id ifRoom 0x7f0a001f
 int id image 0x7f0a0029
 int id info 0x7f0a0063
@@ -576,14 +576,14 @@ int id multiply 0x7f0a0014
 int id never 0x7f0a0020
 int id none 0x7f0a000e
 int id normal 0x7f0a000a
-int id notification_background 0x7f0a0065
+int id notification_background 0x7f0a0064
 int id notification_main_column 0x7f0a005f
 int id notification_main_column_container 0x7f0a005e
 int id parentPanel 0x7f0a0030
 int id progress_circular 0x7f0a0005
 int id progress_horizontal 0x7f0a0006
 int id radio 0x7f0a0040
-int id right_icon 0x7f0a0064
+int id right_icon 0x7f0a0067
 int id right_side 0x7f0a0060
 int id screen 0x7f0a0015
 int id scrollIndicatorDown 0x7f0a0036

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
@@ -12,11 +13,13 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
+import java.text.SimpleDateFormat;
+import java.util.Date;
 /**
  * Created by ArchSlave on 2017-11-05.
  */
@@ -128,5 +131,29 @@ public class Utils {
         } else {
             return tessDir;
         }
+    }
+
+    public static File saveScreenShot(Bitmap bitmap) {
+        final String imageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Screenshots/";
+        final String timeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
+        final String fileName = "Screenshot_"+timeStamp+".png";
+        final String imagePath = imageDir+fileName;
+        File dir = new File(imageDir);
+        if(!dir.exists())
+            dir.mkdirs();
+        File file = new File(imagePath);
+        FileOutputStream fos;
+        try {
+            fos = new FileOutputStream(imagePath);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, e.getMessage(), e);
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+        }
+        Log.e(TAG,"Screenshot saved at"+imagePath);
+        return file;
     }
 }

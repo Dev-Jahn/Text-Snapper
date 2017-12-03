@@ -13,6 +13,7 @@ import com.googlecode.leptonica.android.Scale;
 
 /**
  * Created by CypressRH on 2017-11-16.
+ * Uri를 받아 이미지파일을 Pix타입으로 로드하기 위한 AsyncTask
  */
 
 public class ImageLoadAsyncTask extends AsyncTask<Void, Void, ImageLoadAsyncTask.LoadResult>
@@ -54,6 +55,9 @@ public class ImageLoadAsyncTask extends AsyncTask<Void, Void, ImageLoadAsyncTask
         this.photoUri = uri;
     }
 
+    /**
+     * 이미지 로드가 시작됨을 브로드캐스트
+     */
     @Override
     protected void onPreExecute()
     {
@@ -62,6 +66,9 @@ public class ImageLoadAsyncTask extends AsyncTask<Void, Void, ImageLoadAsyncTask
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
     }
 
+    /**
+     * 이미지로드가 완료됨을 브로드캐스트
+     */
     @Override
     protected void onPostExecute(LoadResult result)
     {
@@ -75,6 +82,9 @@ public class ImageLoadAsyncTask extends AsyncTask<Void, Void, ImageLoadAsyncTask
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
     }
 
+    /**
+     * 작업 쓰레드에서 이미지 로딩
+     */
     @Override
     protected LoadResult doInBackground(Void... params)
     {

@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.TextView;
@@ -36,6 +37,7 @@ public class OCRService extends Service
     private Uri photoUri;
     private OCRProcessor mProcessor;
     private Messenger mMessenger;
+    private IOCRServiceCallback mCallback = null;
     private AsyncTask<Void, Void, ImageLoadAsyncTask.LoadResult> mImageLoadTask;
     private int mAccuracy;
 
@@ -43,23 +45,27 @@ public class OCRService extends Service
     {
     }
 
-    @Override
-    public void onCreate()
+    IOCRService.Stub mBinder = new IOCRService.Stub()
     {
-        mMessenger = new Messenger(new ProgressHandler(this));
-        mProcessor = new OCRProcessor(mMessenger);
-    }
+        @Override
+        public void basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat, double aDouble, String aString) throws RemoteException
+        {
 
-    @Override
-    public int onStartCommand(final Intent intent, int flags, int startId)
-    {
-        if(intent==null)
-        {
-            Log.e("TAG","intent is null");
-            return Service.START_NOT_STICKY;
         }
-        else
+        @Override
+        public void setCallback(IOCRServiceCallback callback)
         {
+            mCallback = callback;
+        }
+        @Override
+        public void startOCR(final Intent intent) throws RemoteException
+        {
+            if(intent==null)
+            {
+                Log.e(TAG,"intent is null");
+                return;
+            }
+            lang = intent.getStringExtra("lang");
             new Thread()
             {
                 @Override
@@ -69,7 +75,13 @@ public class OCRService extends Service
                 }
             }.start();
         }
-        return super.onStartCommand(intent, flags, startId);
+    };
+
+    @Override
+    public void onCreate()
+    {
+        mMessenger = new Messenger(new ProgressHandler(this));
+        mProcessor = new OCRProcessor(mMessenger);
     }
 
     private void processCommand(Intent intent)
@@ -202,8 +214,6 @@ public class OCRService extends Service
     {
 
     }
-    
-
 
     @Override
     public void onDestroy()
@@ -215,7 +225,7 @@ public class OCRService extends Service
     public IBinder onBind(Intent intent)
     {
         Log.e(TAG, "OCR Service binded");
-        return null;
+        return mBinder;
     }
 
     @Override
@@ -270,7 +280,17 @@ public class OCRService extends Service
                 break;
             case OCRProcessor.MESSAGE_UTF8_TEXT:
                 this.utf8String = (String) msg.obj;
-                Toast.makeText(OCRService.this, this.utf8String, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(OCRService.this, this.utf8String, Toast.LENGTH_SHORT).show();
+                if (mCallback!=null)
+                {
+                    try
+                    {
+                        mCallback.sendResult(msg);
+                    } catch (RemoteException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
                 break;
             case OCRProcessor.MESSAGE_END:
                 Toast.makeText(OCRService.this, "MSG_END", Toast.LENGTH_SHORT).show();

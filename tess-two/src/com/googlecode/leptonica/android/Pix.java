@@ -97,7 +97,6 @@ public class Pix {
         if (buffer == null) {
             throw new RuntimeException("native getData failed");
         }
-
         return buffer;
     }
 
