@@ -12,6 +12,8 @@ import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.CountDownTimer;
+import android.os.Environment;
+import android.os.FileObserver;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -24,7 +26,11 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import java.io.File;
+
 import kr.ac.ssu.cse.jahn.textsnapper.R;
+
+import static android.content.ContentValues.TAG;
 
 public class FloatingService extends Service {
 
@@ -556,6 +562,10 @@ public class FloatingService extends Service {
     };
 
     /**
+     *
+     */
+    View.OnClickListener drawerButtonListener
+    /**
      * Pending Intent를 이용해서 App이 꺼져도
      * Floating Button이 죽지않도록 Notification을 이용한다.
      */
@@ -577,12 +587,34 @@ public class FloatingService extends Service {
                 .build();
     }
 
+    /**
+     * 스크린샷으로 저장소에 파일이 생성되는 것을 감지하는 FileObserver를 시작
+     */
+    private void setFileObserver()
+    {
+        String path = Environment.getExternalStorageDirectory()
+                + File.separator + Environment.DIRECTORY_PICTURES
+                + File.separator + "Screenshots" + File.separator;
+        Log.d(TAG, path);
+
+        FileObserver fileObserver = new FileObserver(path, FileObserver.CREATE) {
+            @Override
+            public void onEvent(int event, String path) {
+                Log.e(TAG, event + " " + path);
+            }
+        };
+
+        fileObserver.startWatching();
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         PendingIntent pendingIntent = createPendingIntent();
         Notification notification = createNotification(pendingIntent);
         // Notification 시작
         startForeground(FOREGROUND_ID, notification);
+
+        setFileObserver();
         if (startId == Service.START_STICKY) {
             handleStart();
             return super.onStartCommand(intent, flags, startId);
