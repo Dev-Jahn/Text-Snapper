@@ -165,7 +165,7 @@ public class FloatingService extends Service {
                             removeImageHeight = removeImage.getLayoutParams().height;
                             startTime = System.currentTimeMillis();
                             // 삭제하는 이미지가 얼마나 오랫동안 누르고 있어야 등장할 지 결정
-                            longHandler.postDelayed(longRunnable, 500);
+                            longHandler.postDelayed(longRunnable, 300);
 
                             /**
                              * Floating Button을 움직일 때 기준이 되는 위치
@@ -539,6 +539,7 @@ public class FloatingService extends Service {
                 // floatingHead가 왼쪽 벽에 붙어있는 경우 애니메이션
                 if (floatingParams.x < windowSize.x / 2) {
                     canDrawBar = false;
+                    canMove = false;
                     new CountDownTimer(500, 5) {
                         WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
                         WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
@@ -562,6 +563,7 @@ public class FloatingService extends Service {
                             windowManager.updateViewLayout(floatingBar, mParams);
                             canDrawBar = true;
                             isBarActive = true;
+                            canMove = true;
                         }
                     }.start();
                 }
@@ -569,6 +571,7 @@ public class FloatingService extends Service {
                 // floatingHead가 오른쪽 벽에 붙어있는 경우 애니메이션
                 else {
                     canDrawBar = false;
+                    canMove = false;
                     new CountDownTimer(500, 5) {
                         WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
                         WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
@@ -593,6 +596,7 @@ public class FloatingService extends Service {
                             windowManager.updateViewLayout(floatingBar, mParams);
                             canDrawBar = true;
                             isBarActive = true;
+                            canMove = true;
                         }
                     }.start();
                 }
