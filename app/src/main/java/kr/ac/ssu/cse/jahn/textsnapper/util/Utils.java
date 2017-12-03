@@ -134,7 +134,7 @@ public class Utils {
     }
 
     public static File saveScreenShot(Bitmap bitmap) {
-        final String imageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Screenshots";
+        final String imageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Screenshots/";
         final String timeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
         final String fileName = "Screenshot_"+timeStamp+".png";
         final String imagePath = imageDir+fileName;
@@ -153,6 +153,7 @@ public class Utils {
         } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
         }
+        Log.e(TAG,"Screenshot saved at"+imagePath);
         return file;
     }
 }

@@ -26,8 +26,6 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
-import java.io.File;
-
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 
 import static android.content.ContentValues.TAG;
@@ -617,18 +615,15 @@ public class FloatingService extends Service {
      */
     private void setFileObserver()
     {
-        String path = Environment.getExternalStorageDirectory()
-                + File.separator + Environment.DIRECTORY_PICTURES
-                + File.separator + "Screenshots" + File.separator;
-        Log.d(TAG, path);
+        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Screenshots/";
 
         FileObserver fileObserver = new FileObserver(path, FileObserver.CREATE) {
             @Override
             public void onEvent(int event, String path) {
-                Log.e(TAG, event + " " + path);
+                Log.e(TAG, "event detected");
             }
         };
-
+        Log.e(TAG,"FileObserver started watching");
         fileObserver.startWatching();
     }
 
