@@ -613,6 +613,7 @@ public class FloatingService extends Service {
 
     /**
      * 스크린샷으로 저장소에 파일이 생성되는 것을 감지하는 FileObserver를 시작
+     * ㅇㄹㄴㅇㄹ
      */
     private void setFileObserver()
     {
