@@ -28,6 +28,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -223,7 +224,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
         public void onClick(View v) {
             if(Utils.canDrawOverlays(MainActivity.this)) {
-                if(FloatingService.isServiceActive() == false)
                     startFloatingHead();
             } else{
                 requestPermission(PERMISSION_REQUEST_CODE_FLOATING_BUTTON);
@@ -311,8 +311,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void startFloatingHead() {
-        Intent intent = new Intent(getApplicationContext(), FloatingService.class);
-        startService(intent);
+
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean canUseFloating = pref.getBoolean("floatingButtonUse", true);
+        /**
+         * 서비스가 버튼을 클릭할 때 마다 실행되는 문제 해결
+         */
+        if(!FloatingService.isServiceActive() && canUseFloating) {
+            Intent intent = new Intent(getApplicationContext(), FloatingService.class);
+            startService(intent);
+        }
+        /**
+         * Option 연동
+         */
+        if(!canUseFloating) {
+            Toast.makeText(getApplicationContext(), "FloatingButton 옵션이 비활성화되어 있습니다.", Toast.LENGTH_LONG).show();
+        }
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
