@@ -11,6 +11,7 @@ import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.os.Build;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -29,11 +30,11 @@ public class FloatingService extends Service {
 
     private static final int FOREGROUND_ID = 7816;
     private static final int REQUEST_PENDING = 9048;
-
+    private static boolean isServiceActive;
     private static boolean isBarActive;
     private static boolean isEng;
     private static boolean canDraw;
-    private static boolean canMove;
+    private boolean isLeft = false;
 
     private WindowManager windowManager;
     private RelativeLayout removeHead, floatingHead;
@@ -54,6 +55,8 @@ public class FloatingService extends Service {
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
         windowManager = (WindowManager)getSystemService(WINDOW_SERVICE);
         isBarActive = false;
+        isServiceActive = true;
+        canDraw = true;
         /**
          * Remove Head inflate 부분
          * TYPE_PHONE Flag가 deprecated라고 하여 삭제할 생각은 XXXXXX
@@ -99,8 +102,8 @@ public class FloatingService extends Service {
          * Floating Button의 초기 위치 설정 코드
          * 이후 사양이 변경되면 이 곳을 수정
          */
-        floatingParams.x = windowSize.x - 100;
-        floatingParams.y = windowSize.y * 3 / 4;
+        floatingParams.x = windowSize.x - (int)(floatingImage.getLayoutParams().width * 0.75);
+        floatingParams.y = (int)(windowSize.y * 0.75);
         windowManager.addView(floatingHead, floatingParams);
 
         floatingHead.setOnTouchListener(new View.OnTouchListener() {
@@ -148,8 +151,8 @@ public class FloatingService extends Service {
                 // 이동되는 좌표
                 int afterX;
                 int afterY;
-                // Bar가 떠있거나 고정했을 경우는 움직이지 않는다.
-                if (isBarActive == false) {
+                // Bar가 떠있거나 고정했을 경우 또는 애니메이션 진행중일 경우 움직이지 않는다.
+                if (isBarActive == false && canDraw == true) {
                     switch (event.getAction()) {
                         // 롱클릭
                         case MotionEvent.ACTION_DOWN:
@@ -254,20 +257,22 @@ public class FloatingService extends Service {
 
                             int diffX = currentX - initX;
                             int diffY = currentY - initY;
-
+                            // X, Y 이동값이 적은 경우는 FloatingBar를 띄우는 액션으로 본다
                             if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5) {
                                 endTime = System.currentTimeMillis();
+                                // 물론 클릭했던 시간이 적은 경우에만
                                 if ((endTime - startTime) < 500) {
-                                    // click 했을 때 리스트 띄우는 코드
                                     showFloatingBar();
                                 }
                             }
-
                             afterY = marginY + diffY;
 
-                            int BarHeight = getStatusBarHeight();
-
                             newFloatingParams.y = afterY;
+                            // 만약 X 이동값이 큰 경우, 벽에 붙인다.
+                            if(Math.abs(diffX) >= 5){
+                                attachSide(currentX);
+                             }
+
                             isOnRemoveHead = false;
 
                             break;
@@ -303,6 +308,51 @@ public class FloatingService extends Service {
         return statusBarHeight;
     }
 
+    private double bounceValue(long step, long scale){
+        double value = scale * java.lang.Math.exp(-0.055 * step) * java.lang.Math.cos(0.08 * step);
+        return value;
+    }
+
+    private void moveToLeft(final int currentX){
+        final int afterX = windowSize.x - currentX;
+        new CountDownTimer(500, 5) {
+            WindowManager.LayoutParams mParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
+            public void onTick(long t) {
+                long step = (500 - t)/5;
+                mParams.x = -(int)(floatingImage.getLayoutParams().width * 0.25) - (int)(double)bounceValue(step, afterX);
+                windowManager.updateViewLayout(floatingHead, mParams);
+            }
+            public void onFinish() {
+                mParams.x = -(int)(floatingImage.getLayoutParams().width * 0.25);
+                windowManager.updateViewLayout(floatingHead, mParams);
+            }
+        }.start();
+    }
+    private  void moveToRight(final int currentX){
+        new CountDownTimer(500, 5) {
+            WindowManager.LayoutParams mParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
+            public void onTick(long t) {
+                long step = (500 - t)/5;
+                mParams.x = windowSize.x - (int)(floatingImage.getLayoutParams().width * 0.75) + (int)(double)bounceValue(step, currentX);
+                windowManager.updateViewLayout(floatingHead, mParams);
+            }
+            public void onFinish() {
+                mParams.x = windowSize.x - (int)(floatingImage.getLayoutParams().width * 0.75);
+                windowManager.updateViewLayout(floatingHead, mParams);
+            }
+        }.start();
+    }
+
+    private void attachSide(int currentX) {
+        if (currentX <= windowSize.x / 2) {
+            isLeft = true;
+            moveToLeft(currentX);
+        } else {
+            isLeft = false;
+            moveToRight(currentX);
+        }
+    }
+
     /**
      * Long Click을 진행했을 때
      * Floating Button을 삭제할 수 있는 Remove Head를 보여줌
@@ -315,7 +365,7 @@ public class FloatingService extends Service {
         removeParams.x = x;
         removeParams.y = y;
 
-        Log.v("DEBUG", "EXECUTED! x : " + removeParams.width + " y : " + removeParams.height);
+        Log.v("DEBUG", "EXECUTED! x : " + removeParams.x + " y : " + removeParams.y);
         windowManager.updateViewLayout(removeHead, removeParams);
     }
     /**
@@ -323,63 +373,157 @@ public class FloatingService extends Service {
      * Floating Bar를 보여줌
      */
     private void showFloatingBar() {
-        if(floatingBar != null && isBarActive){
-            windowManager.removeView(floatingBar);
-            isBarActive = false;
-        } else {
-            LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-            floatingBar = (RelativeLayout) inflater.inflate(R.layout.activity_floatingbar, null);
+        if(canDraw == true) {
+            if (floatingBar != null && isBarActive) {
+                windowManager.removeView(floatingBar);
+                floatingImage.setImageResource(R.drawable.floating_image);
+                isBarActive = false;
+            } else {
+                LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+                WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
+                // 왼쪽 벽에 붙어있는 경우
+                if (floatingParams.x < windowSize.x / 2) {
+                    floatingBar = (RelativeLayout) inflater.inflate(R.layout.activity_floatingbar_left, null);
 
-            screenshotImage = (ImageView) floatingBar.findViewById(R.id.floatingScreentshot);
-            cropImage = (ImageView) floatingBar.findViewById(R.id.floatingCrop);
-            languageImage = (ImageView) floatingBar.findViewById(R.id.floatingLanguage);
-
-            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            String ocrLanguage = pref.getString("ocrSelect", "English");
-            if(ocrLanguage.equals("English")) {
-                languageImage.setImageResource(R.drawable.eng);
-                isEng = true;
-            } else if(ocrLanguage.equals("한국어")) {
-                languageImage.setImageResource(R.drawable.kor);
-                isEng = false;
-            }
-
-            screenshotImage.setOnTouchListener(imageClickEventListener);
-            cropImage.setOnTouchListener(imageClickEventListener);
-            languageImage.setOnTouchListener(imageClickEventListener);
-
-            languageImage.setOnClickListener(new ImageView.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                    SharedPreferences.Editor editor = pref.edit();
-                    if(isEng) {
-                        /**
-                         * putString 부분 설정 연동 버그를 고쳐야함. 주의할 것.
-                         */
-                        editor.putString("ocrSelect", "한국어");
-                        isEng = false;
-                        languageImage.setImageResource(R.drawable.kor);
-                    } else {
-                        editor.putString("ocrSelect", "English");
-                        isEng = true;
-                        languageImage.setImageResource(R.drawable.eng);
-                    }
+                    screenshotImage = (ImageView) floatingBar.findViewById(R.id.floatingScreentshotLeft);
+                    cropImage = (ImageView) floatingBar.findViewById(R.id.floatingCropLeft);
+                    languageImage = (ImageView) floatingBar.findViewById(R.id.floatingLanguageLeft);
+                    floatingImage.setImageResource(R.drawable.floating_fold_left);
                 }
-            });
+                // 오른쪽 벽에 붙어있는 경우
+                else {
+                    floatingBar = (RelativeLayout) inflater.inflate(R.layout.activity_floatingbar_right, null);
 
+                    screenshotImage = (ImageView) floatingBar.findViewById(R.id.floatingScreentshotRight);
+                    cropImage = (ImageView) floatingBar.findViewById(R.id.floatingCropRight);
+                    languageImage = (ImageView) floatingBar.findViewById(R.id.floatingLanguageRight);
+                    floatingImage.setImageResource(R.drawable.floating_fold_right);
+                }
+                /**
+                 * Bar Layout Ocr Language 버튼 환경설정과 연동
+                 */
+                SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                String ocrLanguage = pref.getString("ocrSelect", "English");
+                if (ocrLanguage.equals("English")) {
+                    languageImage.setImageResource(R.drawable.eng);
+                    isEng = true;
+                } else if (ocrLanguage.equals("한국어")) {
+                    languageImage.setImageResource(R.drawable.kor);
+                    isEng = false;
+                }
 
-            WindowManager.LayoutParams barParams = new WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.TYPE_PHONE,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
-                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                    PixelFormat.TRANSLUCENT);
-            windowManager.addView(floatingBar, barParams);
-            isBarActive = true;
+                screenshotImage.setOnTouchListener(imageClickEventListener);
+                cropImage.setOnTouchListener(imageClickEventListener);
+                languageImage.setOnTouchListener(imageClickEventListener);
 
+                languageImage.setOnClickListener(new ImageView.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                        SharedPreferences.Editor editor = pref.edit();
+                        if (isEng) {
+                            /**
+                             * putString 부분 설정 연동 버그를 고쳐야함. 주의할 것.
+                             */
+                            editor.putString("ocrSelect", "한국어");
+                            isEng = false;
+                            languageImage.setImageResource(R.drawable.kor);
+                        } else {
+                            editor.putString("ocrSelect", "English");
+                            isEng = true;
+                            languageImage.setImageResource(R.drawable.eng);
+                        }
+                    }
+                });
+
+                WindowManager.LayoutParams barParams = new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.TYPE_PHONE,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
+                                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                        PixelFormat.TRANSLUCENT);
+
+                barParams.gravity = Gravity.TOP | Gravity.LEFT;
+
+                /**
+                 * Bar Layout 위치 설정
+                 */
+                // 왼쪽 벽에 붙어있는 경우
+                if (floatingParams.x < windowSize.x / 2) {
+                    barParams.x = floatingParams.x - (int) (screenshotImage.getLayoutParams().width * 3.65);
+                    //barParams.x = floatingParams.x + (int)(floatingImage.getWidth() * 0.25);
+                    barParams.y = floatingParams.y;
+                }
+                // 오른쪽 벽에 붙어있는 경우
+                else {
+                    barParams.x = floatingParams.x + (int) (screenshotImage.getLayoutParams().width * 3.65);
+                    //barParams.x = floatingParams.x - (int) (screenshotImage.getLayoutParams().width * 3.65);
+                    barParams.y = floatingParams.y;
+                }
+                windowManager.addView(floatingBar, barParams);
+
+                // 왼쪽 벽에 붙어있는 경우 애니메이션
+                if (floatingParams.x < windowSize.x / 2) {
+                    canDraw = false;
+                    new CountDownTimer(500, 5) {
+                        WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
+                        WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
+                        WindowManager.LayoutParams mParams = barParams;
+
+                        public void onTick(long t) {
+                            int step = (500 - (int) t) / 7;
+                            int gap = (int) (floatingImage.getWidth() * 0.25) + (int) (screenshotImage.getLayoutParams().width * 3.65);
+                            int accValue = gap / step;
+
+                            mParams.x = barParams.x + accValue;
+
+                            if (mParams.x > floatingParams.x + (int) (floatingImage.getWidth() * 0.25))
+                                mParams.x = floatingParams.x + (int) (floatingImage.getWidth() * 0.25);
+
+                            windowManager.updateViewLayout(floatingBar, mParams);
+                        }
+
+                        public void onFinish() {
+                            mParams.x = floatingParams.x + (int) (floatingImage.getWidth() * 0.25);
+                            windowManager.updateViewLayout(floatingBar, mParams);
+                            canDraw = true;
+                        }
+                    }.start();
+                }
+
+                // 오른쪽 벽에 붙어있는 경우 애니메이션
+                else {
+                    canDraw = false;
+                    new CountDownTimer(500, 5) {
+                        WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
+                        WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
+                        WindowManager.LayoutParams mParams = barParams;
+
+                        public void onTick(long t) {
+                            int step = (500 - (int) t) / 7;
+                            int gap = -2 * (int) (screenshotImage.getLayoutParams().width * 3.65);
+                            int accValue = gap / step;
+
+                            mParams.x = barParams.x + accValue;
+
+                            if (mParams.x < floatingParams.x - (int) (screenshotImage.getLayoutParams().width * 3.65))
+                                mParams.x = floatingParams.x - (int) (screenshotImage.getLayoutParams().width * 3.65);
+
+                            windowManager.updateViewLayout(floatingBar, mParams);
+                        }
+
+                        public void onFinish() {
+                            mParams.x = floatingParams.x - (int) (screenshotImage.getLayoutParams().width * 3.65);
+                            windowManager.updateViewLayout(floatingBar, mParams);
+                            canDraw = true;
+                        }
+                    }.start();
+                }
+
+                isBarActive = true;
+            }
         }
     }
 
@@ -394,8 +538,7 @@ public class FloatingService extends Service {
                 case MotionEvent.ACTION_DOWN: {
                     ImageView view = (ImageView) v;
                     // overlay 색상 설정
-                    // 문제점 1. 리소스에 따라서 반응하는 형식이 다름..
-                    view.getDrawable().setColorFilter(Color.GRAY, PorterDuff.Mode.SRC_ATOP);
+                    view.getDrawable().setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
                     view.invalidate();
                     break;
                 }
@@ -463,6 +606,7 @@ public class FloatingService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        isServiceActive = false;
         if(floatingHead != null){
             windowManager.removeView(floatingHead);
         }
@@ -470,6 +614,10 @@ public class FloatingService extends Service {
         if(removeHead != null){
             windowManager.removeView(removeHead);
         }
+    }
+
+    public static boolean isServiceActive() {
+        return isServiceActive;
     }
 
 }

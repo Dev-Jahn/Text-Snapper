@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/floatingBarLayout"
+    android:id="@+id/floatingBarLayoutRight"
     android:layout_width="300dp"
     android:layout_height="80dp">
     <LinearLayout
         android:layout_width="300dp"
         android:layout_height="80dp"
         android:orientation="horizontal"
-        android:background="@drawable/drawer_left"
+        android:background="@drawable/drawer_right"
         android:gravity="center">
 
         <ImageView
-            android:id="@+id/floatingScreentshot"
+            android:id="@+id/floatingScreentshotRight"
             android:layout_width="65dp"
             android:layout_height="65dp"
             android:src="@drawable/screenshot"
@@ -20,7 +20,7 @@
             android:clickable="true"/>
 
         <ImageView
-            android:id="@+id/floatingCrop"
+            android:id="@+id/floatingCropRight"
             android:layout_width="65dp"
             android:layout_height="65dp"
             android:src="@drawable/crop"
@@ -28,7 +28,7 @@
             android:clickable="true"/>
 
         <ImageView
-            android:id="@+id/floatingLanguage"
+            android:id="@+id/floatingLanguageRight"
             android:layout_width="65dp"
             android:layout_height="65dp"
             android:src="@drawable/eng"

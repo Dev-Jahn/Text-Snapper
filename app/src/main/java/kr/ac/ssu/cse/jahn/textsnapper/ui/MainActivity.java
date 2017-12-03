@@ -51,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     // Floating Action Button Overlay를 위한 요청 코드
     public static int PERMISSION_REQUEST_CODE_FLOATING_BUTTON = 1234;
-    public static int PERMISSION_REQUEST_CODE_FLOATING_BAR = 5678;
     private static final String TAG = "Mainactivity";
     private static final String[] LANGS = {"eng", "kor"};
     protected String mPhotoDirPath = DATA_PATH + "photo/";
@@ -198,8 +197,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 case MotionEvent.ACTION_DOWN: {
                     ImageView view = (ImageView) v;
                     // overlay 색상 설정
-                    // 문제점 1. 리소스에 따라서 반응하는 형식이 다름..
-                    view.getDrawable().setColorFilter(Color.GRAY, PorterDuff.Mode.SRC_ATOP);
+                    view.getDrawable().setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
                     view.invalidate();
                     break;
                 }
@@ -225,21 +223,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
         public void onClick(View v) {
             if(Utils.canDrawOverlays(MainActivity.this)) {
-                startFloatingHead();
+                if(FloatingService.isServiceActive() == false)
+                    startFloatingHead();
             } else{
                 requestPermission(PERMISSION_REQUEST_CODE_FLOATING_BUTTON);
-            }
-        }
-    };
-
-    ImageView.OnClickListener floatingBarEventListener = new ImageView.OnClickListener() {
-
-        @Override
-        public void onClick(View v) {
-            if(Utils.canDrawOverlays(MainActivity.this)) {
-
-            } else {
-              requestPermission(PERMISSION_REQUEST_CODE_FLOATING_BAR);
             }
         }
     };
@@ -323,7 +310,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    //     * FloatingHead Service가 완성될 시 주석 해제
     private void startFloatingHead() {
         Intent intent = new Intent(getApplicationContext(), FloatingService.class);
         startService(intent);
