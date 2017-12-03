@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
 
         //권한요청
-        Utils.request(this, Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
+        Utils.request(this, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
         //디렉토리 생성
         Utils.makeAppDir();
         //파일복사
@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         imageWidget.setOnTouchListener(imageClickEventListener);
         imageWidget.setOnClickListener(floatingButtonEventListener);
 
-        imageGallery.setOnClickListener(new ButtonClickHandler());
+        imageGallery.setOnClickListener(new ButtonClickListener());
 
         viewPager = (ViewPager) findViewById(R.id.viewPager);
         viewPager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         tabLayout.setupWithViewPager(viewPager);
         tabLayout.addOnTabSelectedListener(tabSelectedListener);
     }
-    public class ButtonClickHandler implements View.OnClickListener
+    public class ButtonClickListener implements View.OnClickListener
     {
         public void onClick(View view)
         {

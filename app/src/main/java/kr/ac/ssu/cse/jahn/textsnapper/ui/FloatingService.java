@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
@@ -29,6 +30,7 @@ import android.widget.RelativeLayout;
 import java.io.File;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
+import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
 import static android.content.ContentValues.TAG;
 
@@ -418,9 +420,11 @@ public class FloatingService extends Service {
                     isEng = false;
                 }
 
-                screenshotImage.setOnTouchListener(imageClickEventListener);
-                cropImage.setOnTouchListener(imageClickEventListener);
-                languageImage.setOnTouchListener(imageClickEventListener);
+                screenshotImage.setOnTouchListener(imageTouchEventListener);
+                screenshotImage.setOnClickListener(imageClickEventListener);
+                cropImage.setOnTouchListener(imageTouchEventListener);
+                cropImage.setOnClickListener(imageClickEventListener);
+                languageImage.setOnTouchListener(imageTouchEventListener);
 
                 languageImage.setOnClickListener(new ImageView.OnClickListener() {
                     @Override
@@ -536,7 +540,7 @@ public class FloatingService extends Service {
     /**
      * 버튼을 눌렀을 때 선택되었음을 보여주도록
      */
-    ImageView.OnTouchListener imageClickEventListener = new ImageView.OnTouchListener() {
+    ImageView.OnTouchListener imageTouchEventListener = new ImageView.OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
 
@@ -562,9 +566,32 @@ public class FloatingService extends Service {
     };
 
     /**
-     *
+     * drawer의 버튼을 눌렀을 때의 동작
      */
-    View.OnClickListener drawerButtonListener
+    View.OnClickListener imageClickEventListener = new View.OnClickListener()
+    {
+        @Override
+        public void onClick(View v)
+        {
+            Log.e(TAG, "clicked");
+            switch(v.getId())
+            {
+            case R.id.floatingScreentshotLeft:
+            case R.id.floatingScreentshotRight:
+                Bitmap screenBitmap = Utils.getScreenShot(v);
+                Log.e(TAG, "ss taken");
+                /*Intent intent = new Intent(getApplicationContext(), TestActivity.class);
+                intent.putExtra("screenshot", screenBitmap);
+                startActivity(intent);*/
+                break;
+            case R.id.floatingCropLeft:
+            case R.id.floatingCropRight:
+                break;
+            }
+        }
+    };
+
+
     /**
      * Pending Intent를 이용해서 App이 꺼져도
      * Floating Button이 죽지않도록 Notification을 이용한다.

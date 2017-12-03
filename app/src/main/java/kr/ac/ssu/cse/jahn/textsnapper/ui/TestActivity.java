@@ -3,6 +3,7 @@ package kr.ac.ssu.cse.jahn.textsnapper.ui;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -100,8 +101,13 @@ public class TestActivity extends AppCompatActivity
         mText = (EditText) findViewById(R.id.editText);
         mImageView = (ImageView) findViewById(R.id.imageView);
 
-
         Intent intent = new Intent(this, OCRService.class);
+        //테스트코드
+        Log.e(TAG, "Activity started");
+        Bitmap screenBitmap = intent.getParcelableExtra("screenshot");
+        if (screenBitmap!=null)
+            mImageView.setImageBitmap(screenBitmap);
+
         bindService(intent, mConnection, BIND_AUTO_CREATE);
     }
 
