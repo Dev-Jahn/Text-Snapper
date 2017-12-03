@@ -3,7 +3,6 @@ package kr.ac.ssu.cse.jahn.textsnapper.ui;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -16,6 +15,7 @@ import android.widget.ImageView;
 
 import com.googlecode.leptonica.android.Pix;
 import com.googlecode.leptonica.android.WriteFile;
+import com.squareup.picasso.Picasso;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.IOCRService;
@@ -104,11 +104,16 @@ public class TestActivity extends AppCompatActivity
         Intent intent = new Intent(this, OCRService.class);
         //테스트코드
         Log.e(TAG, "Activity started");
-        Bitmap screenBitmap = intent.getParcelableExtra("screenshot");
-        if (screenBitmap!=null)
-            mImageView.setImageBitmap(screenBitmap);
+        Uri screenshotUri = getIntent().getParcelableExtra("screenshot");
+        if (screenshotUri!=null)
+        {
+            Picasso.with(this).load(screenshotUri).into(mImageView);
+            Log.e(TAG,"image loaded");
+        }
+        else
+            Log.e(TAG,"image not loaded");
 
-        bindService(intent, mConnection, BIND_AUTO_CREATE);
+        //bindService(intent, mConnection, BIND_AUTO_CREATE);
     }
 
     protected void start()

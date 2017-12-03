@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
@@ -30,7 +29,6 @@ import android.widget.RelativeLayout;
 import java.io.File;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
-import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
 import static android.content.ContentValues.TAG;
 
@@ -53,6 +51,7 @@ public class FloatingService extends Service {
 
     @Override
     public void onCreate() {
+
         super.onCreate();
     }
 
@@ -578,7 +577,6 @@ public class FloatingService extends Service {
             {
             case R.id.floatingScreentshotLeft:
             case R.id.floatingScreentshotRight:
-                Bitmap screenBitmap = Utils.getScreenShot(v);
                 Log.e(TAG, "ss taken");
                 /*Intent intent = new Intent(getApplicationContext(), TestActivity.class);
                 intent.putExtra("screenshot", screenBitmap);

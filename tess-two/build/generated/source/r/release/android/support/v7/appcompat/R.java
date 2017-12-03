@@ -558,7 +558,7 @@ public final class R {
         public static int action_mode_bar_stub = 0x7f0a0043;
         public static int action_mode_close_button = 0x7f0a0026;
         public static int action_text = 0x7f0a0058;
-        public static int actions = 0x7f0a0066;
+        public static int actions = 0x7f0a0065;
         public static int activity_chooser_view_content = 0x7f0a0027;
         public static int add = 0x7f0a0013;
         public static int alertTitle = 0x7f0a003b;
@@ -584,7 +584,7 @@ public final class R {
         public static int home = 0x7f0a0004;
         public static int homeAsUp = 0x7f0a000d;
         public static int icon = 0x7f0a002c;
-        public static int icon_group = 0x7f0a0067;
+        public static int icon_group = 0x7f0a0066;
         public static int ifRoom = 0x7f0a001f;
         public static int image = 0x7f0a0029;
         public static int info = 0x7f0a0063;
@@ -598,14 +598,14 @@ public final class R {
         public static int never = 0x7f0a0020;
         public static int none = 0x7f0a000e;
         public static int normal = 0x7f0a000a;
-        public static int notification_background = 0x7f0a0065;
+        public static int notification_background = 0x7f0a0064;
         public static int notification_main_column = 0x7f0a005f;
         public static int notification_main_column_container = 0x7f0a005e;
         public static int parentPanel = 0x7f0a0030;
         public static int progress_circular = 0x7f0a0005;
         public static int progress_horizontal = 0x7f0a0006;
         public static int radio = 0x7f0a0040;
-        public static int right_icon = 0x7f0a0064;
+        public static int right_icon = 0x7f0a0067;
         public static int right_side = 0x7f0a0060;
         public static int screen = 0x7f0a0015;
         public static int scrollIndicatorDown = 0x7f0a0036;

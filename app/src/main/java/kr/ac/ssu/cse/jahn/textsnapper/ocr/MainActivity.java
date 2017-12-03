@@ -146,7 +146,6 @@ public class MainActivity extends AppCompatActivity
         File photoFile = createImageFile();
         //파일프로바이더 사용
         Uri outputFileUri = FileProvider.getUriForFile(getApplicationContext(), getPackageName()+".provider",photoFile);
-
         final Intent takePic = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         takePic.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
         takePic.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
@@ -157,7 +156,7 @@ public class MainActivity extends AppCompatActivity
     private File createImageFile()
     {
         // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = new File(mPhotoDirPath);
         File image;
