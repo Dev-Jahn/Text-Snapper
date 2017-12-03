@@ -1,11 +1,11 @@
 [
     {
-        "merged": "C:\\Users\\CypressRH\\Desktop\\Coding\\Android\\TextSnapper\\tess-two\\build\\intermediates\\res\\merged\\release\\layout\\abc_list_menu_item_icon.xml",
-        "source": "C:\\Users\\CypressRH\\.android\\build-cache\\700d54b018923a858e00ebaa3aa936e626378533\\output\\res\\layout\\abc_list_menu_item_icon.xml"
-    },
-    {
         "merged": "C:\\Users\\CypressRH\\Desktop\\Coding\\Android\\TextSnapper\\tess-two\\build\\intermediates\\res\\merged\\release\\layout\\abc_popup_menu_header_item_layout.xml",
         "source": "C:\\Users\\CypressRH\\.android\\build-cache\\700d54b018923a858e00ebaa3aa936e626378533\\output\\res\\layout\\abc_popup_menu_header_item_layout.xml"
+    },
+    {
+        "merged": "C:\\Users\\CypressRH\\Desktop\\Coding\\Android\\TextSnapper\\tess-two\\build\\intermediates\\res\\merged\\release\\layout\\abc_list_menu_item_icon.xml",
+        "source": "C:\\Users\\CypressRH\\.android\\build-cache\\700d54b018923a858e00ebaa3aa936e626378533\\output\\res\\layout\\abc_list_menu_item_icon.xml"
     },
     {
         "merged": "C:\\Users\\CypressRH\\Desktop\\Coding\\Android\\TextSnapper\\tess-two\\build\\intermediates\\res\\merged\\release\\layout\\abc_list_menu_item_checkbox.xml",
