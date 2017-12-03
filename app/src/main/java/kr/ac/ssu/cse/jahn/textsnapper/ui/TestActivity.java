@@ -15,6 +15,7 @@ import android.widget.ImageView;
 
 import com.googlecode.leptonica.android.Pix;
 import com.googlecode.leptonica.android.WriteFile;
+import com.squareup.picasso.Picasso;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.IOCRService;
@@ -100,9 +101,19 @@ public class TestActivity extends AppCompatActivity
         mText = (EditText) findViewById(R.id.editText);
         mImageView = (ImageView) findViewById(R.id.imageView);
 
-
         Intent intent = new Intent(this, OCRService.class);
-        bindService(intent, mConnection, BIND_AUTO_CREATE);
+        //테스트코드
+        Log.e(TAG, "Activity started");
+        Uri screenshotUri = getIntent().getParcelableExtra("screenshot");
+        if (screenshotUri!=null)
+        {
+            Picasso.with(this).load(screenshotUri).into(mImageView);
+            Log.e(TAG,"image loaded");
+        }
+        else
+            Log.e(TAG,"image not loaded");
+
+        //bindService(intent, mConnection, BIND_AUTO_CREATE);
     }
 
     protected void start()

@@ -12,6 +12,8 @@ import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.CountDownTimer;
+import android.os.Environment;
+import android.os.FileObserver;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -25,6 +27,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
+
+import static android.content.ContentValues.TAG;
 
 public class FloatingService extends Service {
 
@@ -45,6 +49,7 @@ public class FloatingService extends Service {
 
     @Override
     public void onCreate() {
+
         super.onCreate();
     }
 
@@ -412,9 +417,11 @@ public class FloatingService extends Service {
                     isEng = false;
                 }
 
-                screenshotImage.setOnTouchListener(imageClickEventListener);
-                cropImage.setOnTouchListener(imageClickEventListener);
-                languageImage.setOnTouchListener(imageClickEventListener);
+                screenshotImage.setOnTouchListener(imageTouchEventListener);
+                screenshotImage.setOnClickListener(imageClickEventListener);
+                cropImage.setOnTouchListener(imageTouchEventListener);
+                cropImage.setOnClickListener(imageClickEventListener);
+                languageImage.setOnTouchListener(imageTouchEventListener);
 
                 languageImage.setOnClickListener(new ImageView.OnClickListener() {
                     @Override
@@ -530,7 +537,7 @@ public class FloatingService extends Service {
     /**
      * 버튼을 눌렀을 때 선택되었음을 보여주도록
      */
-    ImageView.OnTouchListener imageClickEventListener = new ImageView.OnTouchListener() {
+    ImageView.OnTouchListener imageTouchEventListener = new ImageView.OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
 
@@ -556,6 +563,32 @@ public class FloatingService extends Service {
     };
 
     /**
+     * drawer의 버튼을 눌렀을 때의 동작
+     */
+    View.OnClickListener imageClickEventListener = new View.OnClickListener()
+    {
+        @Override
+        public void onClick(View v)
+        {
+            Log.e(TAG, "clicked");
+            switch(v.getId())
+            {
+            case R.id.floatingScreentshotLeft:
+            case R.id.floatingScreentshotRight:
+                Log.e(TAG, "ss taken");
+                /*Intent intent = new Intent(getApplicationContext(), TestActivity.class);
+                intent.putExtra("screenshot", screenBitmap);
+                startActivity(intent);*/
+                break;
+            case R.id.floatingCropLeft:
+            case R.id.floatingCropRight:
+                break;
+            }
+        }
+    };
+
+
+    /**
      * Pending Intent를 이용해서 App이 꺼져도
      * Floating Button이 죽지않도록 Notification을 이용한다.
      */
@@ -577,12 +610,31 @@ public class FloatingService extends Service {
                 .build();
     }
 
+    /**
+     * 스크린샷으로 저장소에 파일이 생성되는 것을 감지하는 FileObserver를 시작
+     */
+    private void setFileObserver()
+    {
+        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Screenshots/";
+
+        FileObserver fileObserver = new FileObserver(path, FileObserver.CREATE) {
+            @Override
+            public void onEvent(int event, String path) {
+                Log.e(TAG, "event detected");
+            }
+        };
+        Log.e(TAG,"FileObserver started watching");
+        fileObserver.startWatching();
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         PendingIntent pendingIntent = createPendingIntent();
         Notification notification = createNotification(pendingIntent);
         // Notification 시작
         startForeground(FOREGROUND_ID, notification);
+
+        setFileObserver();
         if (startId == Service.START_STICKY) {
             handleStart();
             return super.onStartCommand(intent, flags, startId);

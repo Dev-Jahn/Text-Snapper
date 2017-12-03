@@ -2,6 +2,7 @@ package kr.ac.ssu.cse.jahn.textsnapper.ui;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,7 +10,14 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.graphics.PorterDuff;
+import android.hardware.display.DisplayManager;
+import android.media.Image;
+import android.media.ImageReader;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -22,7 +30,9 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -31,6 +41,7 @@ import android.widget.ImageView;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -40,21 +51,33 @@ import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
 import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.DATA_PATH;
 import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.copyTessdata;
+import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.saveScreenShot;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
 
-    private static final int REQUEST_CAMERA = 0;
-    private static final int REQUEST_GALLERY = 1;
-    private static final int REQUEST_CROP = 2;
+    public static final int REQUEST_CAMERA = 100;
+    public static final int REQUEST_GALLERY = 101;
+    public static final int REQUEST_CROP = 102;
+    public static final int REQUEST_MEDIA_PROJECTION = 103;
+    public static final int REQUEST_PERMISSION_OVERLAY = 104;
 
     // Floating Action Button Overlay를 위한 요청 코드
-    public static int PERMISSION_REQUEST_CODE_FLOATING_BUTTON = 1234;
     private static final String TAG = "Mainactivity";
     private static final String[] LANGS = {"eng", "kor"};
     protected String mPhotoDirPath = DATA_PATH + "photo/";
     protected String mPhotoPath;
+
+    protected MediaProjectionManager mProjectionManager;
+    protected MediaProjection mProjection;
+    protected ImageReader mImageReader;
+    protected Display mDisplay;
+    protected int mDensity;
+    protected int mWidth;
+    protected int mHeight;
+    private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC;
+
     ActionBarDrawerToggle toggle;
     ViewPager viewPager;
 
@@ -64,7 +87,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
 
         //권한요청
-        Utils.request(this, Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
+        Utils.request(this, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
+        mProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+        startActivityForResult(mProjectionManager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
+
         //디렉토리 생성
         Utils.makeAppDir();
         //파일복사
@@ -118,7 +144,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         imageWidget.setOnTouchListener(imageClickEventListener);
         imageWidget.setOnClickListener(floatingButtonEventListener);
 
-        imageGallery.setOnClickListener(new ButtonClickHandler());
+        imageGallery.setOnClickListener(new ButtonClickListener());
+        imageCamera.setOnClickListener(new ButtonClickListener());
 
         viewPager = (ViewPager) findViewById(R.id.viewPager);
         viewPager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
@@ -127,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         tabLayout.setupWithViewPager(viewPager);
         tabLayout.addOnTabSelectedListener(tabSelectedListener);
     }
-    public class ButtonClickHandler implements View.OnClickListener
+    public class ButtonClickListener implements View.OnClickListener
     {
         public void onClick(View view)
         {
@@ -137,7 +164,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 fromGallery();
                 break;
             case R.id.imageCamera:
-                fromCamera();
+                Log.e(TAG,"Camera Button");
+                saveScreenShot(capture(mImageReader));
+                //fromCamera();
                 break;
             }
         }
@@ -226,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if(FloatingService.isServiceActive() == false)
                     startFloatingHead();
             } else{
-                requestPermission(PERMISSION_REQUEST_CODE_FLOATING_BUTTON);
+                requestPermission(REQUEST_PERMISSION_OVERLAY);
             }
         }
     };
@@ -356,6 +385,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.show();
     }
 
+    private void createVirtualDisplay()
+    {
+        Log.e(TAG,"Virtual display created");
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        mDensity = metrics.densityDpi;
+        mDisplay = getWindowManager().getDefaultDisplay();
+
+        // get width and height
+        Point size = new Point();
+        mDisplay.getSize(size);
+        mWidth = size.x;
+        mHeight = size.y;
+
+        mImageReader = ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 2);
+        mProjection.createVirtualDisplay("screen-mirror", mWidth, mHeight, mDensity, VIRTUAL_DISPLAY_FLAGS, mImageReader.getSurface(), null, null);
+    }
+
+    private Bitmap capture(ImageReader reader)
+    {
+        Log.e(TAG, "Capture");
+        Image image = reader.acquireLatestImage();
+        final Image.Plane[] planes = image.getPlanes();
+        final ByteBuffer buffer = planes[0].getBuffer();
+        int offset = 0;
+        int pixelStride = planes[0].getPixelStride();
+        int rowStride = planes[0].getRowStride();
+        int rowPadding = rowStride - pixelStride * mWidth;
+        // create bitmap
+        Bitmap bmp = Bitmap.createBitmap(mWidth+rowPadding/pixelStride, mHeight, Bitmap.Config.ARGB_8888);
+        bmp.copyPixelsFromBuffer(buffer);
+        image.close();
+        return bmp;
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -364,19 +427,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Uri photoUri;
         Log.i(TAG, "resultCode: " + resultCode);
 
-        if (requestCode == PERMISSION_REQUEST_CODE_FLOATING_BUTTON) {
-            if (!Utils.canDrawOverlays(this)) {
-                needPermissionDialog(requestCode);
-            } else {
-                startFloatingHead();
-            }
-        }
-
         if (resultCode == RESULT_OK)
         {
             photoUri = data.getData();
             switch (requestCode)
             {
+            case REQUEST_PERMISSION_OVERLAY:
+                if (!Utils.canDrawOverlays(this)) {
+                    needPermissionDialog(requestCode);
+                } else {
+                    startFloatingHead();
+                }
+                break;
+            case REQUEST_MEDIA_PROJECTION:
+                mProjection = mProjectionManager.getMediaProjection(resultCode, data);
+                /*if (mProjection != null) {
+                    mProjection.registerCallback(new MediaProjectionCallback(), null);
+                }*/
+                createVirtualDisplay();
+
+                break;
             case REQUEST_GALLERY:
                 Intent editIntent = new Intent(Intent.ACTION_EDIT);
                 editIntent.setDataAndType(photoUri, "image/*");
@@ -403,9 +473,5 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         {
             Log.v(TAG, "User cancelled");
         }
-
-
-        //크롭
-
     }
 }
