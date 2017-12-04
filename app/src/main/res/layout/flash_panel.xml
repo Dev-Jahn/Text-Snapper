@@ -6,7 +6,7 @@
         android:id="@+id/pnlFlash"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="[Set to your desired flash colour, image, etc]"
+        android:background="#FFFFFF"
         android:visibility="gone"
         />
 </FrameLayout>

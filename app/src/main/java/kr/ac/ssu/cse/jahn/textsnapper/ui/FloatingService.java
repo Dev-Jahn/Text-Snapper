@@ -10,6 +10,10 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
+import android.hardware.display.DisplayManager;
+import android.media.ImageReader;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -18,6 +22,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -40,6 +45,15 @@ public class FloatingService extends Service {
     private static boolean isEng;
     private static boolean canDraw;
     private boolean isLeft = false;
+
+    protected MediaProjectionManager mProjectionManager;
+    protected MediaProjection mProjection;
+    protected ImageReader mImageReader;
+    protected Display mDisplay;
+    protected int mDensity;
+    protected int mWidth;
+    protected int mHeight;
+    private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC;
 
     private WindowManager windowManager;
     private RelativeLayout removeHead, floatingHead;
@@ -637,6 +651,7 @@ public class FloatingService extends Service {
         startForeground(FOREGROUND_ID, notification);
 
         setFileObserver();
+        mPintent.getParcelableExtra("projection")
 
         if (startId == Service.START_STICKY) {
             handleStart();

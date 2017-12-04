@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected MediaProjection mProjection;
     protected ImageReader mImageReader;
     protected Display mDisplay;
+    protected Intent mProjectionIntent;
     protected int mDensity;
     protected int mWidth;
     protected int mHeight;
@@ -341,6 +342,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void startFloatingHead() {
         Intent intent = new Intent(getApplicationContext(), FloatingService.class);
+        intent.putExtra("projection", mProjectionIntent);
         startService(intent);
     }
     @Override
@@ -402,6 +404,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mProjection.createVirtualDisplay("screen-mirror", mWidth, mHeight, mDensity, VIRTUAL_DISPLAY_FLAGS, mImageReader.getSurface(), null, null);
     }
 
+
     private Bitmap capture(ImageReader reader)
     {
         Log.e(TAG, "Capture");
@@ -440,12 +443,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 break;
             case REQUEST_MEDIA_PROJECTION:
-                mProjection = mProjectionManager.getMediaProjection(resultCode, data);
-                /*if (mProjection != null) {
-                    mProjection.registerCallback(new MediaProjectionCallback(), null);
-                }*/
+                mProjectionIntent = data;
+                data.putExtra("resultcode", resultCode);
                 createVirtualDisplay();
-
                 break;
             case REQUEST_GALLERY:
                 Intent editIntent = new Intent(Intent.ACTION_EDIT);
