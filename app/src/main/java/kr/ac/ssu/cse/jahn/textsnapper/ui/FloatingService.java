@@ -4,13 +4,16 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.hardware.display.DisplayManager;
+import android.media.Image;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
@@ -21,6 +24,7 @@ import android.os.FileObserver;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
@@ -31,6 +35,8 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+
+import java.nio.ByteBuffer;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 
@@ -64,7 +70,7 @@ public class FloatingService extends Service {
 
     @Override
     public void onCreate() {
-
+        mProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         super.onCreate();
     }
 
@@ -643,6 +649,40 @@ public class FloatingService extends Service {
         fileObserver.startWatching();
     }
 
+    private void createVirtualDisplay()
+    {
+        Log.e(TAG,"Virtual display created");
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        mDensity = metrics.densityDpi;
+        mDisplay = windowManager.getDefaultDisplay();
+
+        // get width and height
+        Point size = new Point();
+        mDisplay.getSize(size);
+        mWidth = size.x;
+        mHeight = size.y;
+
+        mImageReader = ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 2);
+        mProjection.createVirtualDisplay("screen-mirror", mWidth, mHeight, mDensity, VIRTUAL_DISPLAY_FLAGS, mImageReader.getSurface(), null, null);
+    }
+
+    private Bitmap capture(ImageReader reader)
+    {
+        Log.e(TAG, "Capture");
+        Image image = reader.acquireLatestImage();
+        final Image.Plane[] planes = image.getPlanes();
+        final ByteBuffer buffer = planes[0].getBuffer();
+        int offset = 0;
+        int pixelStride = planes[0].getPixelStride();
+        int rowStride = planes[0].getRowStride();
+        int rowPadding = rowStride - pixelStride * mWidth;
+        // create bitmap
+        Bitmap bmp = Bitmap.createBitmap(mWidth+rowPadding/pixelStride, mHeight, Bitmap.Config.ARGB_8888);
+        bmp.copyPixelsFromBuffer(buffer);
+        image.close();
+        return bmp;
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         PendingIntent pendingIntent = createPendingIntent();
@@ -651,7 +691,10 @@ public class FloatingService extends Service {
         startForeground(FOREGROUND_ID, notification);
 
         setFileObserver();
-        mPintent.getParcelableExtra("projection")
+        final Intent pIntent = intent.getParcelableExtra("projection");
+        final int resultCode = pIntent.getIntExtra("resultcode",0);
+        mProjection = mProjectionManager.getMediaProjection(resultCode, pIntent);
+        createVirtualDisplay();
 
         if (startId == Service.START_STICKY) {
             handleStart();
