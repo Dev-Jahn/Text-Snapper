@@ -37,8 +37,10 @@ public class FloatingService extends Service {
     private static boolean isServiceActive;
     private static boolean isBarActive;
     private static boolean isEng;
-    private static boolean canDraw;
-    private boolean isLeft = false;
+    private static boolean canDrawBar;
+    private static boolean canMove;
+
+    private static FloatingService thisService;
 
     private WindowManager windowManager;
     private RelativeLayout removeHead, floatingHead;
@@ -59,9 +61,13 @@ public class FloatingService extends Service {
          */
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
         windowManager = (WindowManager)getSystemService(WINDOW_SERVICE);
+
+        thisService = this;
         isBarActive = false;
         isServiceActive = true;
-        canDraw = true;
+        canDrawBar = true;
+        canMove = true;
+
         /**
          * Remove Head inflate 부분
          * TYPE_PHONE Flag가 deprecated라고 하여 삭제할 생각은 XXXXXX
@@ -116,8 +122,7 @@ public class FloatingService extends Service {
             long endTime = 0;
             boolean isLongClick = false;
             boolean isOnRemoveHead = false;
-            int removeX = 0;
-            int removeY = 0;
+
             int initX;
             int initY;
             int marginX;
@@ -156,8 +161,8 @@ public class FloatingService extends Service {
                 // 이동되는 좌표
                 int afterX;
                 int afterY;
-                // Bar가 떠있거나 고정했을 경우 또는 애니메이션 진행중일 경우 움직이지 않는다.
-                if (isBarActive == false && canDraw == true) {
+                // floatingHead를 이동할 수 있으면
+                if (canMove) {
                     switch (event.getAction()) {
                         // 롱클릭
                         case MotionEvent.ACTION_DOWN:
@@ -165,7 +170,7 @@ public class FloatingService extends Service {
                             removeImageHeight = removeImage.getLayoutParams().height;
                             startTime = System.currentTimeMillis();
                             // 삭제하는 이미지가 얼마나 오랫동안 누르고 있어야 등장할 지 결정
-                            longHandler.postDelayed(longRunnable, 500);
+                            longHandler.postDelayed(longRunnable, 300);
 
                             /**
                              * Floating Button을 움직일 때 기준이 되는 위치
@@ -181,6 +186,11 @@ public class FloatingService extends Service {
                         case MotionEvent.ACTION_MOVE:
                             int dx = currentX - initX;
                             int dy = currentY - initY;
+
+                            // 만약 floatingBar가 띄워져 있다면 다시 집어넣는다.
+                            if(isBarActive) {
+                                showFloatingBar();
+                            }
 
                             afterX = marginX + dx;
                             afterY = marginY + dy;
@@ -272,6 +282,11 @@ public class FloatingService extends Service {
                             }
                             afterY = marginY + diffY;
 
+                            if (afterY < topMax)
+                                afterY = topMax;
+                            if (afterY > bottomMax)
+                                afterY = bottomMax;
+
                             newFloatingParams.y = afterY;
                             // 만약 X 이동값이 큰 경우, 벽에 붙인다.
                             if(Math.abs(diffX) >= 5){
@@ -283,7 +298,9 @@ public class FloatingService extends Service {
                             break;
                     }
                     return true;
-                } else {
+                }
+                // Floating Head를 이동할 수 없으면
+                else {
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
                             removeImageWidth = removeImage.getLayoutParams().width;
@@ -302,7 +319,6 @@ public class FloatingService extends Service {
                 }
             }
         });
-
     }
 
     /**
@@ -318,7 +334,7 @@ public class FloatingService extends Service {
         return value;
     }
 
-    private void moveToLeft(final int currentX){
+    private void floatingHeadToLeft(final int currentX){
         final int afterX = windowSize.x - currentX;
         new CountDownTimer(500, 5) {
             WindowManager.LayoutParams mParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
@@ -333,7 +349,7 @@ public class FloatingService extends Service {
             }
         }.start();
     }
-    private  void moveToRight(final int currentX){
+    private void floatingHeadToRight(final int currentX){
         new CountDownTimer(500, 5) {
             WindowManager.LayoutParams mParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
             public void onTick(long t) {
@@ -347,17 +363,13 @@ public class FloatingService extends Service {
             }
         }.start();
     }
-
     private void attachSide(int currentX) {
         if (currentX <= windowSize.x / 2) {
-            isLeft = true;
-            moveToLeft(currentX);
+            floatingHeadToLeft(currentX);
         } else {
-            isLeft = false;
-            moveToRight(currentX);
+            floatingHeadToRight(currentX);
         }
     }
-
     /**
      * Long Click을 진행했을 때
      * Floating Button을 삭제할 수 있는 Remove Head를 보여줌
@@ -378,15 +390,75 @@ public class FloatingService extends Service {
      * Floating Bar를 보여줌
      */
     private void showFloatingBar() {
-        if(canDraw == true) {
+        // floatingBar를 그릴 수 있는 상태이면
+        if (canDrawBar) {
+            // 만약 floatingBar를 집어넣어야 하는 상황이면
             if (floatingBar != null && isBarActive) {
-                windowManager.removeView(floatingBar);
+                canDrawBar = false;
+                WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();;
+                // floatingHead가 왼쪽 벽에 붙어있는 경우 애니메이션
+                if (floatingParams.x < windowSize.x / 2) {
+                    new CountDownTimer(500, 5) {
+                        WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
+                        final int initialX = floatingParams.x;
+                        WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
+                        WindowManager.LayoutParams mParams = barParams;
+                        int gap = -(screenshotImage.getLayoutParams().width * 4) - initialX;
+                        public void onTick(long t) {
+                            long step = (550 - t) / 7;
+                            int accValue = (int)(gap / step);
+
+                            mParams.x = barParams.x + accValue;
+                            mParams.y = floatingParams.y;
+                            windowManager.updateViewLayout(floatingBar, mParams);
+                        }
+
+                        public void onFinish() {
+                            mParams.x = initialX - screenshotImage.getLayoutParams().width * 4;
+                            mParams.y = floatingParams.y;
+                            windowManager.updateViewLayout(floatingBar, mParams);
+                            windowManager.removeView(floatingBar);
+                            isBarActive = false;
+                            canDrawBar = true;
+                        }
+                    }.start();
+                }
+                // floatingHead가 오른쪽 벽에 붙어있는 경우 애니메이션
+                else {
+                    new CountDownTimer(500, 5) {
+                        WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
+                        final int initialX = floatingParams.x - (int) (screenshotImage.getLayoutParams().width * 3.65);
+                        WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
+                        WindowManager.LayoutParams mParams = barParams;
+
+                        public void onTick(long t) {
+                            int step = (550 - (int) t) / 7;
+                            int gap = windowSize.x - initialX;
+                            int accValue = gap / step;
+
+                            mParams.x = barParams.x + accValue;
+                            mParams.y = floatingParams.y;
+                            windowManager.updateViewLayout(floatingBar, mParams);
+                        }
+
+                        public void onFinish() {
+                            mParams.x = windowSize.x;
+                            mParams.y = floatingParams.y;
+                            windowManager.updateViewLayout(floatingBar, mParams);
+                            windowManager.removeView(floatingBar);
+                            isBarActive = false;
+                            canDrawBar = true;
+                        }
+                    }.start();
+                }
                 floatingImage.setImageResource(R.drawable.floating_image);
-                isBarActive = false;
-            } else {
+            }
+            // 만약 floatingBar를 꺼내야 하는 상황이면
+            else {
+                canDrawBar = false;
                 LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
                 WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
-                // 왼쪽 벽에 붙어있는 경우
+                // floatingHead가 왼쪽 벽에 붙어있는 경우
                 if (floatingParams.x < windowSize.x / 2) {
                     floatingBar = (RelativeLayout) inflater.inflate(R.layout.activity_floatingbar_left, null);
 
@@ -395,7 +467,7 @@ public class FloatingService extends Service {
                     languageImage = (ImageView) floatingBar.findViewById(R.id.floatingLanguageLeft);
                     floatingImage.setImageResource(R.drawable.floating_fold_left);
                 }
-                // 오른쪽 벽에 붙어있는 경우
+                // floatingHead가 오른쪽 벽에 붙어있는 경우
                 else {
                     floatingBar = (RelativeLayout) inflater.inflate(R.layout.activity_floatingbar_right, null);
 
@@ -404,6 +476,7 @@ public class FloatingService extends Service {
                     languageImage = (ImageView) floatingBar.findViewById(R.id.floatingLanguageRight);
                     floatingImage.setImageResource(R.drawable.floating_fold_right);
                 }
+
                 /**
                  * Bar Layout Ocr Language 버튼 환경설정과 연동
                  */
@@ -451,7 +524,6 @@ public class FloatingService extends Service {
                                 WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
                                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                         PixelFormat.TRANSLUCENT);
-
                 barParams.gravity = Gravity.TOP | Gravity.LEFT;
 
                 /**
@@ -471,9 +543,10 @@ public class FloatingService extends Service {
                 }
                 windowManager.addView(floatingBar, barParams);
 
-                // 왼쪽 벽에 붙어있는 경우 애니메이션
+                // floatingHead가 왼쪽 벽에 붙어있는 경우 애니메이션
                 if (floatingParams.x < windowSize.x / 2) {
-                    canDraw = false;
+                    canDrawBar = false;
+                    canMove = false;
                     new CountDownTimer(500, 5) {
                         WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
                         WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
@@ -483,9 +556,8 @@ public class FloatingService extends Service {
                             int step = (500 - (int) t) / 7;
                             int gap = (int) (floatingImage.getWidth() * 0.25) + (int) (screenshotImage.getLayoutParams().width * 3.65);
                             int accValue = gap / step;
-
                             mParams.x = barParams.x + accValue;
-
+                            mParams.y = floatingParams.y;
                             if (mParams.x > floatingParams.x + (int) (floatingImage.getWidth() * 0.25))
                                 mParams.x = floatingParams.x + (int) (floatingImage.getWidth() * 0.25);
 
@@ -494,15 +566,19 @@ public class FloatingService extends Service {
 
                         public void onFinish() {
                             mParams.x = floatingParams.x + (int) (floatingImage.getWidth() * 0.25);
+                            mParams.y = floatingParams.y;
                             windowManager.updateViewLayout(floatingBar, mParams);
-                            canDraw = true;
+                            canDrawBar = true;
+                            isBarActive = true;
+                            canMove = true;
                         }
                     }.start();
                 }
 
-                // 오른쪽 벽에 붙어있는 경우 애니메이션
+                // floatingHead가 오른쪽 벽에 붙어있는 경우 애니메이션
                 else {
-                    canDraw = false;
+                    canDrawBar = false;
+                    canMove = false;
                     new CountDownTimer(500, 5) {
                         WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
                         WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
@@ -514,7 +590,7 @@ public class FloatingService extends Service {
                             int accValue = gap / step;
 
                             mParams.x = barParams.x + accValue;
-
+                            mParams.y = floatingParams.y;
                             if (mParams.x < floatingParams.x - (int) (screenshotImage.getLayoutParams().width * 3.65))
                                 mParams.x = floatingParams.x - (int) (screenshotImage.getLayoutParams().width * 3.65);
 
@@ -523,16 +599,18 @@ public class FloatingService extends Service {
 
                         public void onFinish() {
                             mParams.x = floatingParams.x - (int) (screenshotImage.getLayoutParams().width * 3.65);
+                            mParams.y = floatingParams.y;
                             windowManager.updateViewLayout(floatingBar, mParams);
-                            canDraw = true;
+                            canDrawBar = true;
+                            isBarActive = true;
+                            canMove = true;
                         }
                     }.start();
                 }
-
-                isBarActive = true;
             }
         }
     }
+
 
     /**
      * 버튼을 눌렀을 때 선택되었음을 보여주도록
@@ -629,13 +707,12 @@ public class FloatingService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        PendingIntent pendingIntent = createPendingIntent();
-        Notification notification = createNotification(pendingIntent);
-        // Notification 시작
-        startForeground(FOREGROUND_ID, notification);
-
         setFileObserver();
         if (startId == Service.START_STICKY) {
+            PendingIntent pendingIntent = createPendingIntent();
+            Notification notification = createNotification(pendingIntent);
+            // Notification 시작
+            startForeground(FOREGROUND_ID, notification);
             handleStart();
             return super.onStartCommand(intent, flags, startId);
         } else {
@@ -672,4 +749,13 @@ public class FloatingService extends Service {
         return isServiceActive;
     }
 
+    /**
+     * 주의!!!!!!
+     * PrefFragment에서 서비스를 종료시키기 위한 방법으로 이용되는 코드이므로,
+     * 절대로 다른 곳에서 호출하지 말 것
+     * 위험한 코드임
+     */
+    protected static Intent getCurrentFloatingService() {
+        return new Intent(thisService, FloatingService.class);
+    }
 }
