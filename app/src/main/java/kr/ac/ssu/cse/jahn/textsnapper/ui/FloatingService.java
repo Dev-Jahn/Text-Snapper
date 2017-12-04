@@ -67,6 +67,8 @@ public class FloatingService extends Service {
     private SoundPool mSoundPool;
     private int soundID = 0;
     private boolean soundLoaded = false;
+  
+    private static FloatingService thisService;
 
     private WindowManager windowManager;
     private RelativeLayout removeHead, floatingHead;
@@ -151,6 +153,7 @@ public class FloatingService extends Service {
             long endTime = 0;
             boolean isLongClick = false;
             boolean isOnRemoveHead = false;
+
             int initX;
             int initY;
             int marginX;
@@ -363,7 +366,7 @@ public class FloatingService extends Service {
         return value;
     }
 
-    private void moveToLeft(final int currentX){
+    private void floatingHeadToLeft(final int currentX){
         final int afterX = windowSize.x - currentX;
         new CountDownTimer(500, 5) {
             WindowManager.LayoutParams mParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
@@ -378,7 +381,7 @@ public class FloatingService extends Service {
             }
         }.start();
     }
-    private  void moveToRight(final int currentX){
+    private void floatingHeadToRight(final int currentX){
         new CountDownTimer(500, 5) {
             WindowManager.LayoutParams mParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
             public void onTick(long t) {
@@ -392,15 +395,13 @@ public class FloatingService extends Service {
             }
         }.start();
     }
-
     private void attachSide(int currentX) {
         if (currentX <= windowSize.x / 2) {
-            moveToLeft(currentX);
+            floatingHeadToLeft(currentX);
         } else {
-            moveToRight(currentX);
+            floatingHeadToRight(currentX);
         }
     }
-
     /**
      * Long Click을 진행했을 때
      * Floating Button을 삭제할 수 있는 Remove Head를 보여줌
@@ -642,6 +643,7 @@ public class FloatingService extends Service {
         }
     }
 
+
     /**
      * 버튼을 눌렀을 때 선택되었음을 보여주도록
      */
@@ -784,37 +786,31 @@ public class FloatingService extends Service {
             Notification notification = createNotification(pendingIntent);
             // Notification 시작
             startForeground(FOREGROUND_ID, notification);
-
+            
             setFileObserver();
             final Intent pIntent = intent.getParcelableExtra("projection");
-            final int resultCode = pIntent.getIntExtra("resultcode", 0);
-//            mProjection = mProjectionManager.getMediaProjection(resultCode, pIntent);
- //           createVirtualDisplay();
-        setFileObserver();
-        final Intent pIntent = intent.getParcelableExtra("projection");
-        final int resultCode = pIntent.getIntExtra("resultcode",0);
-        mProjection = mProjectionManager.getMediaProjection(resultCode, pIntent);
-        createVirtualDisplay();
-        AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build();
-        mSoundPool = new SoundPool.Builder().setAudioAttributes(audioAttributes).setMaxStreams(8).build();
-        mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-            @Override
-            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
-                soundLoaded = true;
-            }
-        });
-        new Thread(new Runnable()
-        {
-            @Override
-            public void run()
+            final int resultCode = pIntent.getIntExtra("resultcode",0);
+            mProjection = mProjectionManager.getMediaProjection(resultCode, pIntent);
+            createVirtualDisplay();
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+            mSoundPool = new SoundPool.Builder().setAudioAttributes(audioAttributes).setMaxStreams(8).build();
+            mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+                @Override
+                public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                    soundLoaded = true;
+                }
+            });
+            new Thread(new Runnable()
             {
-                soundID = mSoundPool.load(getBaseContext(),R.raw.shutter,1);
-            }
-        }).start();
-
+                @Override
+                public void run()
+                {
+                    soundID = mSoundPool.load(getBaseContext(),R.raw.shutter,1);
+                }
+            }).start();
             handleStart();
             return super.onStartCommand(intent, flags, startId);
         } else {
@@ -871,5 +867,4 @@ public class FloatingService extends Service {
     protected static Intent getCurrentFloatingService() {
         return new Intent(thisService, FloatingService.class);
     }
-
 }
