@@ -13,8 +13,10 @@ import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.hardware.display.DisplayManager;
+import android.media.AudioAttributes;
 import android.media.Image;
 import android.media.ImageReader;
+import android.media.SoundPool;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
@@ -39,6 +41,7 @@ import android.widget.Toast;
 import java.nio.ByteBuffer;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
+import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
 import static android.content.ContentValues.TAG;
 
@@ -61,6 +64,10 @@ public class FloatingService extends Service {
     protected int mHeight;
     private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC;
 
+    private SoundPool mSoundPool;
+    private int soundID = 0;
+    private boolean soundLoaded = false;
+
     private WindowManager windowManager;
     private RelativeLayout removeHead, floatingHead;
     private RelativeLayout floatingBar;
@@ -77,9 +84,9 @@ public class FloatingService extends Service {
     private void handleStart() {
         /**
          * WindowManager로 Floating Head 관리
+         * create virtual display 호출을 위해 onStartCommand 로 이동
          */
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
-        windowManager = (WindowManager)getSystemService(WINDOW_SERVICE);
         isBarActive = false;
         isServiceActive = true;
         canDraw = true;
@@ -597,9 +604,8 @@ public class FloatingService extends Service {
             case R.id.floatingScreentshotLeft:
             case R.id.floatingScreentshotRight:
                 Log.e(TAG, "ss taken");
-                /*Intent intent = new Intent(getApplicationContext(), TestActivity.class);
-                intent.putExtra("screenshot", screenBitmap);
-                startActivity(intent);*/
+                mSoundPool.play(soundID,1,1,0,0,1.0f);
+                Utils.saveScreenShot(capture(mImageReader));
                 break;
             case R.id.floatingCropLeft:
             case R.id.floatingCropRight:
@@ -689,12 +695,32 @@ public class FloatingService extends Service {
         Notification notification = createNotification(pendingIntent);
         // Notification 시작
         startForeground(FOREGROUND_ID, notification);
+        windowManager = (WindowManager)getSystemService(WINDOW_SERVICE);
 
         setFileObserver();
         final Intent pIntent = intent.getParcelableExtra("projection");
         final int resultCode = pIntent.getIntExtra("resultcode",0);
         mProjection = mProjectionManager.getMediaProjection(resultCode, pIntent);
         createVirtualDisplay();
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+        mSoundPool = new SoundPool.Builder().setAudioAttributes(audioAttributes).setMaxStreams(8).build();
+        mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                soundLoaded = true;
+            }
+        });
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                soundID = mSoundPool.load(getBaseContext(),R.raw.shutter,1);
+            }
+        }).start();
 
         if (startId == Service.START_STICKY) {
             handleStart();
@@ -713,6 +739,7 @@ public class FloatingService extends Service {
     }
 
 
+
     /**
      * 생명주기 Destory 당시 붙였던 view들을 제거
      */
@@ -727,6 +754,12 @@ public class FloatingService extends Service {
         if(removeHead != null){
             windowManager.removeView(removeHead);
         }
+        /**
+         * SoundPool 할당 해제
+         */
+        mSoundPool.release();
+        mSoundPool = null;
+        soundID = 0;
     }
 
     public static boolean isServiceActive() {
