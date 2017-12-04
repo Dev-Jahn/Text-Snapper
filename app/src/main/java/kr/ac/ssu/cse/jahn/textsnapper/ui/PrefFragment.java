@@ -1,5 +1,6 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ui;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
@@ -14,7 +15,6 @@ import kr.ac.ssu.cse.jahn.textsnapper.R;
 /**
  * Created by ArchSlave on 2017-11-06.
  */
-
 public class PrefFragment extends PreferenceFragment {
 
     SharedPreferences pref;
@@ -27,9 +27,21 @@ public class PrefFragment extends PreferenceFragment {
             new SharedPreferences.OnSharedPreferenceChangeListener() {
                 @Override
                 public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                    if (key.equals("ocrSelect"))
+                    if (key.equals("ocrSelect")) {
                         listPreference.setSummary("인식할 언어를 선택합니다.\n"
                                 + "현재 언어 : " + pref.getString("ocrSelect", "English"));
+                    }
+
+                    if(key.equals("floatingButtonUse")) {
+                        boolean canUse = pref.getBoolean("floatingButtonUse", true);
+                        if (canUse == false) {
+                            // 옵션 비활성화했는데 현재 서비스가 켜져있다면 종료
+                            if (FloatingService.isServiceActive()) {
+                                Intent stopIntent = FloatingService.getCurrentFloatingService();
+                                getActivity().getApplicationContext().stopService(stopIntent);
+                            }
+                        }
+                    }
                 }
             };
 
@@ -51,4 +63,3 @@ public class PrefFragment extends PreferenceFragment {
         return view;
     }
 }
-
