@@ -784,6 +784,7 @@ public class FloatingService extends Service {
             // Notification 시작
             startForeground(FOREGROUND_ID, notification);
 
+
             setFileObserver();
             final Intent pIntent = intent.getParcelableExtra("projection");
             final int resultCode = pIntent.getIntExtra("resultcode",0);
