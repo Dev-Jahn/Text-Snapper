@@ -34,6 +34,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -245,11 +246,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         @Override
         public void onClick(View v) {
-            if(Utils.canDrawOverlays(MainActivity.this)) {
-                if(FloatingService.isServiceActive() == false)
-                    startFloatingHead();
-            } else{
-                requestPermission(REQUEST_PERMISSION_OVERLAY);
+            SharedPreferences pref = getPreferences(MODE_PRIVATE);
+            boolean canStart = pref.getBoolean("floatingButtonUse", true);
+            if(canStart) {
+                if (Utils.canDrawOverlays(MainActivity.this)) {
+                    if (FloatingService.isServiceActive() == false)
+                        startFloatingHead();
+                } else {
+                    requestPermission(REQUEST_PERMISSION_OVERLAY);
+                }
+            } else {
+                Toast.makeText(getApplicationContext(), "Floating Button Option이 비활성화되어 있습니다.", Toast.LENGTH_LONG).show();
             }
         }
     };
