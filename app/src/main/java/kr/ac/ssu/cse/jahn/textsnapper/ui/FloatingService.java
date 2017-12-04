@@ -67,8 +67,6 @@ public class FloatingService extends Service {
     private SoundPool mSoundPool;
     private int soundID = 0;
     private boolean soundLoaded = false;
-  
-    private static FloatingService thisService;
 
     private WindowManager windowManager;
     private RelativeLayout removeHead, floatingHead;
@@ -153,7 +151,6 @@ public class FloatingService extends Service {
             long endTime = 0;
             boolean isLongClick = false;
             boolean isOnRemoveHead = false;
-
             int initX;
             int initY;
             int marginX;
@@ -786,7 +783,7 @@ public class FloatingService extends Service {
             Notification notification = createNotification(pendingIntent);
             // Notification 시작
             startForeground(FOREGROUND_ID, notification);
-            
+
             setFileObserver();
             final Intent pIntent = intent.getParcelableExtra("projection");
             final int resultCode = pIntent.getIntExtra("resultcode",0);
@@ -811,10 +808,11 @@ public class FloatingService extends Service {
                     soundID = mSoundPool.load(getBaseContext(),R.raw.shutter,1);
                 }
             }).start();
+
             handleStart();
             return super.onStartCommand(intent, flags, startId);
         } else {
-            return Service.START_NOT_STICKY;
+                return Service.START_NOT_STICKY;
         }
     }
 
@@ -867,4 +865,5 @@ public class FloatingService extends Service {
     protected static Intent getCurrentFloatingService() {
         return new Intent(thisService, FloatingService.class);
     }
+
 }
