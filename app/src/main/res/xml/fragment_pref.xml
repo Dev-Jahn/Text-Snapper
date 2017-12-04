@@ -8,12 +8,10 @@
             android:key="floatingButtonUse"
             android:title="Floating Button 사용"
             android:summary="이 앱의 Floating Button 기능을 활성화합니다."/>
-        <SwitchPreference
+        <CheckBoxPreference
             android:key="floatingButtonLocation"
             android:title="Floating Button 위치 고정"
-            android:summary="Floating Button 위치를 현재 위치에 고정합니다."
-            android:thumb="@drawable/switch_thumb"
-            android:track="@drawable/switch_track"/>
+            android:summary="Floating Button 위치를 현재 위치에 고정합니다." />
 
     </PreferenceCategory>
 

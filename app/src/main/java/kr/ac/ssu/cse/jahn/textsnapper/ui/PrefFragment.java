@@ -1,5 +1,6 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ui;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ public class PrefFragment extends PreferenceFragment {
 
     SharedPreferences pref;
     ListPreference listPreference;
+    Context context;
 
     /**
      * ConfigActivity에서 설정 값이 변화한 경우의 Listener
@@ -31,16 +33,19 @@ public class PrefFragment extends PreferenceFragment {
                         listPreference.setSummary("인식할 언어를 선택합니다.\n"
                                 + "현재 언어 : " + pref.getString("ocrSelect", "English"));
                     }
-
                     if(key.equals("floatingButtonUse")) {
                         boolean canUse = pref.getBoolean("floatingButtonUse", true);
                         if (canUse == false) {
                             // 옵션 비활성화했는데 현재 서비스가 켜져있다면 종료
                             if (FloatingService.isServiceActive()) {
                                 Intent stopIntent = FloatingService.getCurrentFloatingService();
-                                getActivity().getApplicationContext().stopService(stopIntent);
+                                context.stopService(stopIntent);
                             }
                         }
+                    }
+                    if(key.equals("floatingButtonLocation")) {
+                        boolean cannotMove = pref.getBoolean("floatingButtonLocation", true);
+                        FloatingService.setCannotMove(cannotMove);
                     }
                 }
             };
@@ -61,5 +66,11 @@ public class PrefFragment extends PreferenceFragment {
         pref.registerOnSharedPreferenceChangeListener(prefListener);
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        context = getActivity().getApplicationContext();
     }
 }
