@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -417,7 +418,6 @@ public class FloatingService extends Service {
         removeParams.x = x;
         removeParams.y = y;
 
-        Log.v("DEBUG", "EXECUTED! x : " + removeParams.x + " y : " + removeParams.y);
         windowManager.updateViewLayout(removeHead, removeParams);
     }
     /**
@@ -834,6 +834,45 @@ public class FloatingService extends Service {
         return null;
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration config) {
+        super.onConfigurationChanged(config);
+
+        if(windowManager == null)
+            return;
+
+        /**
+         * windowSize 재설정
+         */
+        windowManager.getDefaultDisplay().getSize(windowSize);
+
+        WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
+
+        // 기본으로 오른쪽에 위치하도록 한다.
+        attachSide(windowSize.x);
+
+        // Bar 제거
+        if(isBarActive) {
+            windowManager.removeView(floatingBar);
+            isBarActive = false;
+        }
+
+        switch(config.orientation) {
+            //
+            case Configuration.ORIENTATION_LANDSCAPE:
+                int position = floatingHead.getHeight() + getStatusBarHeight();
+                if(floatingParams.y + position > windowSize.y) {
+                    floatingParams.y = windowSize.y - position;
+                    windowManager.updateViewLayout(floatingHead, floatingParams);
+                }
+                break;
+            //
+            case Configuration.ORIENTATION_PORTRAIT:
+                break;
+        }
+
+
+    }
 
 
     /**
@@ -878,6 +917,10 @@ public class FloatingService extends Service {
         return new Intent(thisService, FloatingService.class);
     }
 
+    /**
+     * Crop Activity에서 호출바람
+     * 주 : 1회 호출시 hide, 2회 호출시 다시 show
+     */
     protected void hide() {
         if(isHidden) {
             floatingHead.setVisibility(View.VISIBLE);
