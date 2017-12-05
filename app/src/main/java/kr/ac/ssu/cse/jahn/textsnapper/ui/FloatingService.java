@@ -848,12 +848,12 @@ public class FloatingService extends Service {
 
         WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
 
-        // 기본으로 오른쪽에 위치하도록 한다.
-        attachSide(windowSize.x);
+        attachSide(floatingParams.x);
 
         // Bar 제거
         if(isBarActive) {
             windowManager.removeView(floatingBar);
+            floatingImage.setImageResource(R.drawable.floating_fold);
             isBarActive = false;
         }
 
