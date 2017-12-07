@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -25,6 +26,8 @@ import android.os.Environment;
 import android.os.FileObserver;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -36,7 +39,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 
@@ -55,6 +57,8 @@ public class FloatingService extends Service {
     private static boolean canDrawBar;
     private static boolean canMove;
 
+    protected FileObserver mObserver;
+    private Handler mFileHandler;
     protected MediaProjectionManager mProjectionManager;
     protected MediaProjection mProjection;
     protected ImageReader mImageReader;
@@ -685,6 +689,7 @@ public class FloatingService extends Service {
                 Log.e(TAG, "ss taken");
                 mSoundPool.play(soundID,1,1,0,0,1.0f);
                 Utils.saveScreenShot(capture(mImageReader));
+
                 break;
             case R.id.floatingCropLeft:
             case R.id.floatingCropRight:
@@ -692,7 +697,6 @@ public class FloatingService extends Service {
             }
         }
     };
-
 
     /**
      * Pending Intent를 이용해서 App이 꺼져도
@@ -718,20 +722,26 @@ public class FloatingService extends Service {
 
     /**
      * 스크린샷으로 저장소에 파일이 생성되는 것을 감지하는 FileObserver를 시작
-     * ㅇㄹㄴㅇㄹ
      */
     private void setFileObserver()
     {
-        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Screenshots/";
-
-        FileObserver fileObserver = new FileObserver(path, FileObserver.CREATE) {
+        mFileHandler = new Handler(Looper.getMainLooper())
+        {
             @Override
-            public void onEvent(int event, String path) {
-                Toast.makeText(FloatingService.this, "스크린샷저장이 감지되었습니다", Toast.LENGTH_SHORT).show();
+            public void handleMessage(Message msg)
+            {
+                Intent i = new Intent();
+                i.setComponent(new ComponentName(getPackageName(),getPackageName()+".TestActivity"));
+                Log.e(TAG, "파일생성 감지: "+msg.getData().getString("path"));
+                //startActivity(i);
             }
         };
+        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Screenshots/";
+
+        mObserver = new ScreenshotObserver(path, mFileHandler);
+        mObserver.startWatching();
         Log.e(TAG,"FileObserver started watching");
-        fileObserver.startWatching();
+
     }
 
     private void createVirtualDisplay()
@@ -783,7 +793,6 @@ public class FloatingService extends Service {
             Notification notification = createNotification(pendingIntent);
             // Notification 시작
             startForeground(FOREGROUND_ID, notification);
-
 
             setFileObserver();
             final Intent pIntent = intent.getParcelableExtra("projection");
@@ -844,13 +853,15 @@ public class FloatingService extends Service {
         if(thisService != null) {
             thisService = null;
         }
-        /**
-         * SoundPool 할당 해제
-         */
+        // SoundPool 할당 해제
         mSoundPool.release();
         mSoundPool = null;
         soundID = 0;
-
+        // MediaProjection 정지
+        mProjection.stop();
+        mImageReader.close();
+        // 파일옵저버 정지
+        mObserver.stopWatching();
     }
 
     public static boolean isServiceActive() {
