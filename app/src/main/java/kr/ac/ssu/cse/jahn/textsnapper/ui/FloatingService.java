@@ -125,7 +125,7 @@ public class FloatingService extends Service {
         removeHead.setVisibility(View.INVISIBLE);
         removeImage = (ImageView) removeHead.findViewById(R.id.removeImage);
         windowManager.addView(removeHead, removeParams);
-
+        
         /**
          * Floating Head inflate 부분
          */

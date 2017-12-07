@@ -9,12 +9,13 @@ import java.util.List;
 
 public class PagerAdapter extends FragmentPagerAdapter {
     List<Fragment> fragmentList = new ArrayList<Fragment>();
-    private String titles[] = new String[]{"Recent Files", "Documents", "Test"};
+    private String titles[] = new String[]{"Recent Files", "Documents", "Test" ,"RRR"};
     public PagerAdapter(FragmentManager fm) {
         super(fm);
         fragmentList.add(new RecentFilesFragment());
         fragmentList.add(new DocumentFragment());
         fragmentList.add(new TestFragment());
+        fragmentList.add(new FavoriteFragment());
     }
 
     @Override

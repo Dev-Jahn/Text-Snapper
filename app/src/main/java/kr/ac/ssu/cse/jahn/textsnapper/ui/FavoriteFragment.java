@@ -1,7 +1,8 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ui;
 
-import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -18,19 +19,17 @@ import java.io.File;
 import java.sql.Date;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.ui.src.FileAdapter;
 import kr.ac.ssu.cse.jahn.textsnapper.ui.src.FileDatabase;
 import kr.ac.ssu.cse.jahn.textsnapper.ui.src.Item;
-import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
 /**
- * Created by ArchSlave on 2017-12-06.
+ * Created by ArchSlave on 2017-12-07.
  */
 
-public class TestFragment extends Fragment {
+public class FavoriteFragment extends Fragment {
 
     FileAdapter adapter;
     Context context;
@@ -42,8 +41,9 @@ public class TestFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_test, container, false);
-        mListView = (ListView) view.findViewById(R.id.listView);
+        mListView = (ListView)view.findViewById(R.id.listView);
         mList = new ArrayList<Item>();
+
 
         /**
          * 파일을 클릭했을 때에 대한 처리
@@ -66,21 +66,31 @@ public class TestFragment extends Fragment {
 
                 PopupMenu mPopup = new PopupMenu(context, view, Gravity.RIGHT);
 
-                mPopup.getMenuInflater().inflate(R.menu.menu_file_pop_up, mPopup.getMenu());
+                mPopup.getMenuInflater().inflate(R.menu.menu_favorite_pop_up, mPopup.getMenu());
 
                 mPopup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
-                        switch (item.getItemId()) {
-                            case R.id.setFavoriteMenu:
-                                FileDatabase database = FileDatabase.getInstance(context);
-                                ContentValues addRowValue = new ContentValues();
-                                addRowValue.put("filename", curItem.getFileName());
-                                addRowValue.put("file", curItem.getFilePath());
-                                long insertRecordId = database.insert(addRowValue);
-                                break;
+                        FileDatabase database = FileDatabase.getInstance(context);
+                        switch(item.getItemId()) {
+                            // 별명 설정
+                            case R.id.setTitleMenu :
+                                Intent intent;
 
-                            case R.id.deleteMenu:
+                                break;
+                            // 즐겨찾기 해제
+                            case R.id.setFavoriteMenu :
+                                database.delete("file='"+curItem.getFilePath()+"'", null);
+                                updateAdapterList();
+                                adapter.notifyDataSetChanged();
+                                break;
+                            // 파일 삭제
+                            case R.id.deleteMenu :
+                                File delFile = new File(curItem.getFilePath());
+                                delFile.delete();
+                                database.delete("file='"+curItem.getFilePath()+"'", null);
+                                updateAdapterList();
+                                adapter.notifyDataSetChanged();
                                 break;
                         }
                         return true;
@@ -107,36 +117,32 @@ public class TestFragment extends Fragment {
     }
 
     public void updateAdapterList() {
-        File curDir = new File(Utils.DATA_PATH);
+        mList.clear();
+        String[] columns = {"filename, file"};
+        FileDatabase database = FileDatabase.getInstance(context);
 
-        File[] curFiles = curDir.listFiles();
+        Cursor cursor = database.query(columns, null, null, null, null, null);
 
-        ArrayList<Item> file = new ArrayList<Item>();
-        try {
-            for (File curFile : curFiles) {
-                Log.d("FileIO", curFile.getAbsolutePath());
-                Date lastModDate = new Date(curFile.lastModified());
+        if(cursor != null) {
+            while (cursor.moveToNext()) {
+                File file = new File(cursor.getString(1));
+                String fileUnit = "Bytes";
+                long fileSize = file.length();
+                if (fileSize > 1024) {
+                    fileSize /= 1024;
+                    fileUnit = "KB";
+                    if (fileSize > 1024) {
+                        fileSize /= 1024;
+                        fileUnit = "MB";
+                    }
+                }
+                Date lastModDate = new Date(file.lastModified());
                 DateFormat formatter = DateFormat.getDateTimeInstance();
                 String modDate = formatter.format(lastModDate);
 
-                if (!curFile.isDirectory()) {
-                    String fileUnit = "Bytes";
-                    long fileSize = curFile.length();
-                    if (fileSize > 1024) {
-                        fileSize /= 1024;
-                        fileUnit = "KB";
-                        if (fileSize > 1024) {
-                            fileSize /= 1024;
-                            fileUnit = "MB";
-                        }
-                    }
-                    file.add(new Item(curFile.getName(), fileSize + fileUnit, modDate, curFile.getAbsolutePath()));
-                }
+                mList.add(new Item(cursor.getString(0), fileSize + fileUnit, modDate, file.getAbsolutePath()));
             }
-        } catch (Exception e) {
-            Log.d("EXCEPTION", "Exception : " + e);
+            cursor.close();
         }
-        Collections.sort(file);
-        mList = file;
     }
 }

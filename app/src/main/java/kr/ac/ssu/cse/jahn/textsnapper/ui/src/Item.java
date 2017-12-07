@@ -8,11 +8,17 @@ public class Item implements Comparable<Item> {
     private String fileName;
     private String fileSize;
     private String fileDate;
+    private String filePath;
 
-    public Item(String name, String size, String date) {
+    public Item(String name, String size, String date, String path) {
         fileName = name;
         fileSize = size;
         fileDate = date;
+        filePath = path;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public String getFileName() {
@@ -27,22 +33,12 @@ public class Item implements Comparable<Item> {
         return fileDate;
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public void setFileSize(String fileSize) {
-        this.fileSize = fileSize;
-    }
-
-    public void setFileDate(String fileDate) {
-        this.fileDate = fileDate;
-    }
+    public String getFilePath() { return filePath; }
 
     @Override
     public int compareTo(Item item) {
         if(fileName != null) {
-            return fileName.toLowerCase().compareTo(item.getFileName().toLowerCase());
+            return fileDate.toLowerCase().compareTo(item.getFileDate().toLowerCase());
         } else {
             throw new IllegalArgumentException();
         }

@@ -1,6 +1,8 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ui.src;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +10,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
@@ -51,15 +54,19 @@ public class FileAdapter extends BaseAdapter {
             itemView = mLayoutInflater.inflate(R.layout.list_item, null);
         }
 
-        ImageView imageView = (ImageView)itemView.findViewById(R.id.imageView);
+        ImageView fileImageView = (ImageView)itemView.findViewById(R.id.fileImageView);
         TextView fileNameTextView = (TextView)itemView.findViewById(R.id.fileNameTextView);
         TextView fileSizeTextView = (TextView)itemView.findViewById(R.id.fileSizeTextView);
         TextView fileDateTextView = (TextView)itemView.findViewById(R.id.fileDateTextView);
 
         Item curItem = mList.get(position);
 
-        if(imageView != null)
-            imageView.setImageResource(R.drawable.image_gallery);
+        File curFile = new File(curItem.getFilePath());
+        if(curFile.exists()) {
+            Bitmap fileBitmapImage = BitmapFactory.decodeFile(curFile.getAbsolutePath());
+            fileImageView.setImageBitmap(fileBitmapImage);
+        }
+
         fileNameTextView.setText(curItem.getFileName());
         fileSizeTextView.setText(curItem.getFileSize());
         fileDateTextView.setText(curItem.getFileDate());
