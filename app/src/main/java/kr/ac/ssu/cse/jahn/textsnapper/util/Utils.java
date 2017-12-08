@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Environment;
@@ -155,5 +156,20 @@ public class Utils {
         }
         Log.e(TAG,"Screenshot saved at"+imagePath);
         return file;
+    }
+
+    public static int getStatusBarHeight(Resources r) {
+        int height;
+
+        Resources myResources = r;
+        int idStatusBarHeight = myResources.getIdentifier(
+                "status_bar_height", "dimen", "android");
+        if (idStatusBarHeight > 0) {
+            height = r.getDimensionPixelSize(idStatusBarHeight);
+        }else{
+            height = 0;
+        }
+
+        return height;
     }
 }

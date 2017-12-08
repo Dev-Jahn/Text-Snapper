@@ -698,7 +698,7 @@ public class FloatingService extends Service {
                 WindowManager.LayoutParams cropParams = new WindowManager.LayoutParams(
                         windowSize.x,
                         windowSize.y,
-                        WindowManager.LayoutParams.TYPE_PRIORITY_PHONE,
+                        WindowManager.LayoutParams.TYPE_PHONE,
                         WindowManager.LayoutParams.FLAG_FULLSCREEN,// |
                         //WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                         PixelFormat.RGBA_8888);

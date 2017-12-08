@@ -40,6 +40,17 @@ public class CropRect extends RectF
         vertices[BOTTOM_RIGHT.ordinal()] = new PointF(rect.right, rect.bottom);
     }
 
+    public CropRect(CropRect cr)
+    {
+        this.left = cr.left;
+        this.right = cr.right;
+        this.top = cr.top;
+        this.bottom = cr.bottom;
+
+        for (int i=0;i<8;i++)
+            this.vertices[i] = cr.vertices[i];
+    }
+
     public CropRect()
     {
         this(0,0,0,0);
@@ -68,5 +79,27 @@ public class CropRect extends RectF
         vertices[BOTTOM_LEFT.ordinal()].set(rect.left, rect.bottom);
         vertices[BOTTOM.ordinal()].set(rect.centerX(), rect.bottom);
         vertices[BOTTOM_RIGHT.ordinal()].set(rect.right, rect.bottom);
+    }
+
+    public void grow(Position pos, PointF p)
+    {
+        if (pos==TOP_LEFT||pos==TOP||pos==TOP_RIGHT)
+            this.top = p.y;
+        else if (pos==BOTTOM_LEFT||pos==BOTTOM||pos==BOTTOM_RIGHT)
+            this.bottom = p.y;
+
+        if (pos==TOP_LEFT||pos==LEFT||pos==BOTTOM_LEFT)
+            this.left = p.x;
+        else if (pos==TOP_RIGHT||pos==RIGHT||pos==BOTTOM_RIGHT)
+            this.right = p.x;
+
+        vertices[TOP_LEFT.ordinal()].set(this.left, this.top);
+        vertices[TOP.ordinal()].set(this.centerX(), this.top);
+        vertices[TOP_RIGHT.ordinal()].set(this.right, this.top);
+        vertices[LEFT.ordinal()].set(this.left, this.centerY());
+        vertices[RIGHT.ordinal()].set(this.right, this.centerY());
+        vertices[BOTTOM_LEFT.ordinal()].set(this.left, this.bottom);
+        vertices[BOTTOM.ordinal()].set(this.centerX(), this.bottom);
+        vertices[BOTTOM_RIGHT.ordinal()].set(this.right, this.bottom);
     }
 }

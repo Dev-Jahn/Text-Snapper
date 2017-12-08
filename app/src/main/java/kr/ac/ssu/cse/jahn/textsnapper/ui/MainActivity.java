@@ -51,6 +51,7 @@ import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.copyTessdata;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    public static int statusbarHeight;
 
     public static final int REQUEST_CAMERA = 100;
     public static final int REQUEST_GALLERY = 101;
@@ -81,6 +82,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //상단바 높이 저장
+        statusbarHeight = Utils.getStatusBarHeight(getResources());
+        Log.e(TAG,String.valueOf(statusbarHeight));
 
         //권한요청
         Utils.request(this, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
