@@ -141,6 +141,7 @@ public class FloatingService extends Service {
                 PixelFormat.TRANSLUCENT);
 
 
+
         floatingParams.gravity = Gravity.TOP | Gravity.LEFT;
         /**
          * Floating Button의 초기 위치 설정 코드
@@ -693,6 +694,15 @@ public class FloatingService extends Service {
                 break;
             case R.id.floatingCropLeft:
             case R.id.floatingCropRight:
+                CropView cv = new CropView(thisService, windowSize.x, windowSize.y, windowManager);
+                WindowManager.LayoutParams cropParams = new WindowManager.LayoutParams(
+                        windowSize.x,
+                        windowSize.y,
+                        WindowManager.LayoutParams.TYPE_PRIORITY_PHONE,
+                        WindowManager.LayoutParams.FLAG_FULLSCREEN,// |
+                        //WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                        PixelFormat.RGBA_8888);
+                windowManager.addView(cv,cropParams);
                 break;
             }
         }
