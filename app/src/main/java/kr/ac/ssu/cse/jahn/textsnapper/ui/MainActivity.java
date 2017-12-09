@@ -256,6 +256,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if(canStart) {
                 if (Utils.canDrawOverlays(MainActivity.this)) {
                     if (FloatingService.isServiceActive() == false)
+                        // 시작
                         startFloatingHead();
                 } else {
                     requestPermission(REQUEST_PERMISSION_OVERLAY);

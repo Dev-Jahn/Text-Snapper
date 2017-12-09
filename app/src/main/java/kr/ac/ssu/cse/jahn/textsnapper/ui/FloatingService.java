@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -55,7 +56,8 @@ public class FloatingService extends Service {
     private static boolean isBarActive;
     private static boolean isEng;
     private static boolean canDrawBar;
-    private static boolean canMove;
+    private static boolean cannotMove;
+    private static boolean isHidden;
 
     protected FileObserver mObserver;
     private Handler mFileHandler;
@@ -94,12 +96,17 @@ public class FloatingService extends Service {
          * create virtual display 호출을 위해 onStartCommand 로 이동
          */
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
+        /**
+         * boolean 변수 관리
+         */
         thisService = this;
         isBarActive = false;
         isServiceActive = true;
         canDrawBar = true;
-        canMove = true;
+        cannotMove = pref.getBoolean("floatingButtonLocation", false);
+        isHidden = false;
 
         /**
          * Remove Head inflate 부분
@@ -196,7 +203,7 @@ public class FloatingService extends Service {
                 int afterX;
                 int afterY;
                 // floatingHead를 이동할 수 있으면
-                if (canMove) {
+                if (!cannotMove) {
                     switch (event.getAction()) {
                         // 롱클릭
                         case MotionEvent.ACTION_DOWN:
@@ -416,7 +423,6 @@ public class FloatingService extends Service {
         removeParams.x = x;
         removeParams.y = y;
 
-        Log.v("DEBUG", "EXECUTED! x : " + removeParams.x + " y : " + removeParams.y);
         windowManager.updateViewLayout(removeHead, removeParams);
     }
     /**
@@ -547,6 +553,7 @@ public class FloatingService extends Service {
                             isEng = true;
                             languageImage.setImageResource(R.drawable.eng);
                         }
+                        editor.commit();
                     }
                 });
 
@@ -580,7 +587,7 @@ public class FloatingService extends Service {
                 // floatingHead가 왼쪽 벽에 붙어있는 경우 애니메이션
                 if (floatingParams.x < windowSize.x / 2) {
                     canDrawBar = false;
-                    canMove = false;
+                    cannotMove = true;
                     new CountDownTimer(500, 5) {
                         WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
                         WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
@@ -604,7 +611,8 @@ public class FloatingService extends Service {
                             windowManager.updateViewLayout(floatingBar, mParams);
                             canDrawBar = true;
                             isBarActive = true;
-                            canMove = true;
+                            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                            cannotMove = pref.getBoolean("floatingButtonLocation", false);
                         }
                     }.start();
                 }
@@ -612,7 +620,7 @@ public class FloatingService extends Service {
                 // floatingHead가 오른쪽 벽에 붙어있는 경우 애니메이션
                 else {
                     canDrawBar = false;
-                    canMove = false;
+                    cannotMove = true;
                     new CountDownTimer(500, 5) {
                         WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
                         WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
@@ -637,7 +645,8 @@ public class FloatingService extends Service {
                             windowManager.updateViewLayout(floatingBar, mParams);
                             canDrawBar = true;
                             isBarActive = true;
-                            canMove = true;
+                            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                            cannotMove = pref.getBoolean("floatingButtonLocation", false);
                         }
                     }.start();
                 }
@@ -844,6 +853,45 @@ public class FloatingService extends Service {
         return null;
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration config) {
+        super.onConfigurationChanged(config);
+
+        if(windowManager == null)
+            return;
+
+        /**
+         * windowSize 재설정
+         */
+        windowManager.getDefaultDisplay().getSize(windowSize);
+
+        WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
+
+        attachSide(floatingParams.x);
+
+        // Bar 제거
+        if(isBarActive) {
+            windowManager.removeView(floatingBar);
+            floatingImage.setImageResource(R.drawable.floating_fold);
+            isBarActive = false;
+        }
+
+        switch(config.orientation) {
+            //
+            case Configuration.ORIENTATION_LANDSCAPE:
+                int position = floatingHead.getHeight() + getStatusBarHeight();
+                if(floatingParams.y + position > windowSize.y) {
+                    floatingParams.y = windowSize.y - position;
+                    windowManager.updateViewLayout(floatingHead, floatingParams);
+                }
+                break;
+            //
+            case Configuration.ORIENTATION_PORTRAIT:
+                break;
+        }
+
+
+    }
 
 
     /**
@@ -854,14 +902,14 @@ public class FloatingService extends Service {
     public void onDestroy() {
         super.onDestroy();
         isServiceActive = false;
-        if(floatingHead != null){
+        if(floatingHead != null) {
             windowManager.removeView(floatingHead);
         }
-        if(removeHead != null){
+        if(removeHead != null) {
             windowManager.removeView(removeHead);
         }
-        if(thisService != null) {
-            thisService = null;
+        if(floatingBar != null) {
+            windowManager.removeView(floatingBar);
         }
         // SoundPool 할당 해제
         mSoundPool.release();
@@ -886,6 +934,33 @@ public class FloatingService extends Service {
      */
     protected static Intent getCurrentFloatingService() {
         return new Intent(thisService, FloatingService.class);
+    }
+
+    /**
+     * Crop Activity에서 호출바람
+     * 주 : 1회 호출시 hide, 2회 호출시 다시 show
+     */
+    protected void hide() {
+        if(isHidden) {
+            floatingHead.setVisibility(View.VISIBLE);
+            windowManager.updateViewLayout(floatingHead, floatingHead.getLayoutParams());
+            if(isBarActive) {
+                floatingBar.setVisibility(View.VISIBLE);
+                windowManager.updateViewLayout(floatingBar, floatingBar.getLayoutParams());
+            }
+        } else {
+            isHidden = true;
+            floatingHead.setVisibility(View.INVISIBLE);
+            windowManager.updateViewLayout(floatingHead, floatingHead.getLayoutParams());
+            if(isBarActive) {
+                floatingBar.setVisibility(View.INVISIBLE);
+                windowManager.updateViewLayout(floatingBar, floatingBar.getLayoutParams());
+            }
+        }
+    }
+
+    protected static void setCannotMove(boolean option) {
+        cannotMove = option;
     }
 
 }
