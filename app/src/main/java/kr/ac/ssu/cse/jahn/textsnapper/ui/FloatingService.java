@@ -411,6 +411,9 @@ public class FloatingService extends Service {
         }
     }
 
+    /**
+     * 호출시 상단으로 가는데, 수정할 필요가 있음
+     */
     private void toTopLeft() {
         if(isBarActive) {
             showFloatingBar();
