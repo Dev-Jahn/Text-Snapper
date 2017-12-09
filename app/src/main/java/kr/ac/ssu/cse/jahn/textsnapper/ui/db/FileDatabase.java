@@ -1,4 +1,4 @@
-package kr.ac.ssu.cse.jahn.textsnapper.ui.src;
+package kr.ac.ssu.cse.jahn.textsnapper.ui.db;
 
 import android.content.ContentValues;
 import android.content.Context;

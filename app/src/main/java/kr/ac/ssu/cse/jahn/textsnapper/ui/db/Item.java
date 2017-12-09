@@ -1,4 +1,4 @@
-package kr.ac.ssu.cse.jahn.textsnapper.ui.src;
+package kr.ac.ssu.cse.jahn.textsnapper.ui.db;
 
 /**
  * Created by ArchSlave on 2017-12-07.

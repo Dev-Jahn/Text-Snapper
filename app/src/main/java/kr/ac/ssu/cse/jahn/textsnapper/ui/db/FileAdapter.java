@@ -1,4 +1,4 @@
-package kr.ac.ssu.cse.jahn.textsnapper.ui.src;
+package kr.ac.ssu.cse.jahn.textsnapper.ui.db;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -15,6 +15,11 @@ import java.util.ArrayList;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 
+import static kr.ac.ssu.cse.jahn.textsnapper.R.id.fileDateTextView;
+import static kr.ac.ssu.cse.jahn.textsnapper.R.id.fileImageView;
+import static kr.ac.ssu.cse.jahn.textsnapper.R.id.fileNameTextView;
+import static kr.ac.ssu.cse.jahn.textsnapper.R.id.fileSizeTextView;
+
 /**
  * Created by ArchSlave on 2017-12-07.
  */
@@ -23,6 +28,13 @@ public class FileAdapter extends BaseAdapter {
     Context mContext;
     ArrayList<Item> mList;
     LayoutInflater mLayoutInflater;
+
+    class ViewHolder {
+        ImageView fileImageView;
+        TextView fileNameTextView;
+        TextView fileSizeTextView;
+        TextView fileDateTextView;
+    }
 
     public FileAdapter(Context context, ArrayList<Item> list) {
         mContext = context;
@@ -49,29 +61,35 @@ public class FileAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
 
         View itemView = convertView;
+        ViewHolder viewHolder = null;
 
         if(itemView == null) {
             itemView = mLayoutInflater.inflate(R.layout.list_item, null);
-        }
 
-        ImageView fileImageView = (ImageView)itemView.findViewById(R.id.fileImageView);
-        TextView fileNameTextView = (TextView)itemView.findViewById(R.id.fileNameTextView);
-        TextView fileSizeTextView = (TextView)itemView.findViewById(R.id.fileSizeTextView);
-        TextView fileDateTextView = (TextView)itemView.findViewById(R.id.fileDateTextView);
+            viewHolder = new ViewHolder();
+            viewHolder.fileImageView = (ImageView)itemView.findViewById(fileImageView);
+            viewHolder.fileNameTextView = (TextView)itemView.findViewById(fileNameTextView);
+            viewHolder.fileSizeTextView = (TextView)itemView.findViewById(fileSizeTextView);
+            viewHolder.fileDateTextView = (TextView)itemView.findViewById(fileDateTextView);
+
+            itemView.setTag(viewHolder);
+        } else {
+            viewHolder = (ViewHolder)itemView.getTag();
+        }
 
         Item curItem = mList.get(position);
 
         File curFile = new File(curItem.getFilePath());
         if(curFile.exists()) {
             Bitmap fileBitmapImage = BitmapFactory.decodeFile(curFile.getAbsolutePath());
-            fileImageView.setImageBitmap(fileBitmapImage);
+            viewHolder.fileImageView.setImageBitmap(fileBitmapImage);
+            viewHolder.fileNameTextView.setText(curItem.getFileName());
+            viewHolder.fileSizeTextView.setText(curItem.getFileSize());
+            viewHolder.fileDateTextView.setText(curItem.getFileDate());
+
+        } else {
+            mList.remove(curItem);
         }
-
-        fileNameTextView.setText(curItem.getFileName());
-        fileSizeTextView.setText(curItem.getFileSize());
-        fileDateTextView.setText(curItem.getFileDate());
-
-
         return itemView;
     }
 }
