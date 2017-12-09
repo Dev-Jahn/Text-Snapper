@@ -41,6 +41,7 @@ import android.widget.Toast;
 import java.nio.ByteBuffer;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
+import kr.ac.ssu.cse.jahn.textsnapper.util.TranslateHelper;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
 import static android.content.ContentValues.TAG;
@@ -307,7 +308,7 @@ public class FloatingService extends Service {
 
                             int diffX = currentX - initX;
                             int diffY = currentY - initY;
-
+/**
                             // X, Y 이동값이 적은 경우는 FloatingBar를 띄우는 액션으로 본다
                             if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5) {
                                 endTime = System.currentTimeMillis();
@@ -316,8 +317,8 @@ public class FloatingService extends Service {
                                     showFloatingBar();
                                 }
                             }
-
-                          //toTopLeft();
+**/
+                          attachTop();
                             afterY = marginY + diffY;
 
                             if (afterY < topMax)
@@ -412,9 +413,9 @@ public class FloatingService extends Service {
     }
 
     /**
-     * 호출시 상단으로 가는데, 수정할 필요가 있음
+     * 호출시 상단으로 Floating Button 이동
      */
-    private void toTopLeft() {
+    private void attachTop() {
         if(isBarActive) {
             showFloatingBar();
         }
@@ -426,7 +427,6 @@ public class FloatingService extends Service {
                 windowManager.updateViewLayout(floatingHead, mParams);
             }
             public void onFinish() {
-                mParams.x = 0;
                 mParams.y = 0;
                 windowManager.updateViewLayout(floatingHead, mParams);
                 showResult();
@@ -444,8 +444,10 @@ public class FloatingService extends Service {
                 WindowManager.LayoutParams.TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                         WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
+                        WindowManager.LayoutParams.FLAG_DIM_BEHIND |
                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSLUCENT);
+        resultParams.dimAmount = (float)0.5;
         resultParams.gravity = Gravity.TOP | Gravity.LEFT;
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -496,6 +498,8 @@ public class FloatingService extends Service {
                 /**
                  * 번역버튼 눌렀을 때의 행동
                  */
+                TranslateHelper translateHelper = TranslateHelper.getInstance(true, "I like coffee");
+                translateHelper.start();
             }
         });
 
@@ -798,7 +802,6 @@ public class FloatingService extends Service {
 
     /**
      * 스크린샷으로 저장소에 파일이 생성되는 것을 감지하는 FileObserver를 시작
-     * ㅇㄹㄴㅇㄹ
      */
     private void setFileObserver()
     {

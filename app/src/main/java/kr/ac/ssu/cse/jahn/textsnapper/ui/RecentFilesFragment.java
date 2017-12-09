@@ -155,7 +155,6 @@ public class RecentFilesFragment extends Fragment {
         adapter.notifyDataSetChanged();
     }
 
-
     /**
      * 주의! Fragment 상호 교류를 위해 어쩔 수 없이 채택한 코드
      * Fragment 외 호출 금지
