@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     ActionBarDrawerToggle toggle;
     ViewPager viewPager;
+    DrawerLayout drawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
          * toggle.syncState()를 해야 메뉴 버튼이 추가되니 toggle.syncState()까지
          * 코드를 수정하지 말 것!
          **/
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.mainDrawer);
+        drawer = (DrawerLayout) findViewById(R.id.mainDrawer);
         toggle = new ActionBarDrawerToggle(
                 this, drawer, R.string.drawer_open, R.string.drawer_close) {
             @Override
@@ -124,13 +125,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         /**
          * 이하는 Main Activity 버튼에 관한 이벤트 처리
-         **/
-        /**
-        Button button = (Button)findViewById(R.id.widget);
-        button.setOnClickListener(floatingButtonEventListener);
-         */
-
-        /**
+         *
          * 각 버튼에 대해 클릭되었을 때 나타나는 애니메이션 리스너를 달아준다
          */
         ImageView imageCamera = (ImageView)findViewById(R.id.imageCamera);
@@ -261,6 +256,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onResume();
         SharedPreferences setRefer = PreferenceManager
                 .getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = setRefer.edit();
+        editor.putString("ocrSelect",setRefer.getString("ocrSelect", "English"));
+        editor.putBoolean("floatingButtonUse",setRefer.getBoolean("floatingButtonUse", true));
+        editor.putBoolean("floatingButtonLocation",setRefer.getBoolean("floatingButtonLocation", false));
+        editor.commit();
     }
 
     /**
@@ -310,6 +310,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(intent);
                 break;
             case R.id.navigation_favorite:
+                drawer.closeDrawers();
+                viewPager.setCurrentItem(1);
                 break;
         }
         return true;

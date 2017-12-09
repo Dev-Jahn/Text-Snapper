@@ -1,8 +1,13 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ui;
 
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.Gravity;
@@ -26,6 +31,8 @@ import kr.ac.ssu.cse.jahn.textsnapper.ui.db.FileDatabase;
 import kr.ac.ssu.cse.jahn.textsnapper.ui.db.Item;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by ArchSlave on 2017-11-16.
  */
@@ -36,6 +43,7 @@ public class RecentFilesFragment extends Fragment {
     private Context context;
     private ListView mListView;
     private static ArrayList<Item> mList;
+    private ScreenshotObserver observer;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -109,9 +117,24 @@ public class RecentFilesFragment extends Fragment {
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        Log.d("DEBUG8", "ac");
         super.onActivityCreated(savedInstanceState);
         context = getActivity().getApplicationContext();
+        Handler handler = new Handler(Looper.getMainLooper())
+        {
+            @Override
+            public void handleMessage(Message msg)
+            {
+                Intent i = new Intent();
+                i.setComponent(new ComponentName(context.getPackageName(),context.getPackageName()+".TestActivity"));
+                Log.e(TAG, "파일생성 감지: "+msg.getData().getString("path"));
+                updateAdapterList();
+                adapter.notifyDataSetChanged();
+                //startActivity(i);
+            }
+        };
+        observer = new ScreenshotObserver(Utils.DATA_PATH, handler);
+        observer.startWatching();
+
         updateAdapterList();
         adapter = new FileAdapter(context, mList);
         mListView.setAdapter(adapter);

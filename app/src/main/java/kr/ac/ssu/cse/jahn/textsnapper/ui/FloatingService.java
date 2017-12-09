@@ -58,6 +58,7 @@ public class FloatingService extends Service {
     private static boolean canDrawBar;
     private static boolean cannotMove;
     private static boolean isHidden;
+    private static boolean isResultPopup;
 
     protected FileObserver mObserver;
     private Handler mFileHandler;
@@ -107,6 +108,7 @@ public class FloatingService extends Service {
         canDrawBar = true;
         cannotMove = pref.getBoolean("floatingButtonLocation", false);
         isHidden = false;
+        isResultPopup = false;
 
         /**
          * Remove Head inflate 부분
@@ -313,7 +315,7 @@ public class FloatingService extends Service {
 
                             int diffX = currentX - initX;
                             int diffY = currentY - initY;
-/**
+
                             // X, Y 이동값이 적은 경우는 FloatingBar를 띄우는 액션으로 본다
                             if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5) {
                                 endTime = System.currentTimeMillis();
@@ -322,8 +324,10 @@ public class FloatingService extends Service {
                                     showFloatingBar();
                                 }
                             }
-**/
-                          attachTop();
+/**
+ * 개발중인 기능 : attachTop()
+ */
+                          //attachTop();
                             afterY = marginY + diffY;
 
                             if (afterY < topMax)
@@ -434,84 +438,84 @@ public class FloatingService extends Service {
             public void onFinish() {
                 mParams.y = 0;
                 windowManager.updateViewLayout(floatingHead, mParams);
-                showResult();
             }
         }.start();
     }
 
     private void showResult() {
-        /**
-         * 최초 Result PopUp Params 설정
-         */
-        WindowManager.LayoutParams resultParams = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
-                        WindowManager.LayoutParams.FLAG_DIM_BEHIND |
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                PixelFormat.TRANSLUCENT);
-        resultParams.dimAmount = (float)0.5;
-        resultParams.gravity = Gravity.TOP | Gravity.LEFT;
+        if(!isResultPopup) {
+            /**
+             * 최초 Result PopUp Params 설정
+             */
+            WindowManager.LayoutParams resultParams = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.TYPE_PHONE,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
+                            WindowManager.LayoutParams.FLAG_DIM_BEHIND |
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT);
+            resultParams.dimAmount = (float) 0.5;
+            resultParams.gravity = Gravity.TOP | Gravity.LEFT;
 
-        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+            LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
 
-        /**
-         * Inflate & FindView
-         */
-        final LinearLayout resultLayout = (LinearLayout)inflater.inflate(R.layout.result_pop_up, null);
+            /**
+             * Inflate & FindView
+             */
+            final LinearLayout resultLayout = (LinearLayout) inflater.inflate(R.layout.result_pop_up, null);
 
-        LinearLayout cancelArea = (LinearLayout) resultLayout.findViewById(R.id.cancelArea);
-
-
-        ImageView save = (ImageView)resultLayout.findViewById(R.id.save);
-        ImageView translate = (ImageView)resultLayout.findViewById(R.id.translate);
-        ImageView cancel = (ImageView)resultLayout.findViewById(R.id.cancel);
+            LinearLayout cancelArea = (LinearLayout) resultLayout.findViewById(R.id.cancelArea);
 
 
+            ImageView save = (ImageView) resultLayout.findViewById(R.id.save);
+            ImageView translate = (ImageView) resultLayout.findViewById(R.id.translate);
+            ImageView cancel = (ImageView) resultLayout.findViewById(R.id.cancel);
 
-        resultParams.x = 0;
-        resultParams.y = 0;
-        windowManager.addView(resultLayout, resultParams);
 
+            resultParams.x = 0;
+            resultParams.y = 0;
+            windowManager.addView(resultLayout, resultParams);
+            isResultPopup = true;
 
-        /**
-         * Event Listener 설정
-         */
-        View.OnClickListener cancelEventListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                windowManager.removeView(resultLayout);
-            }
-        };
-        cancelArea.setOnClickListener(cancelEventListener);
-        cancel.setOnClickListener(cancelEventListener);
+            /**
+             * Event Listener 설정
+             */
+            View.OnClickListener cancelEventListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    windowManager.removeView(resultLayout);
+                    isResultPopup = false;
+                }
+            };
+            cancelArea.setOnClickListener(cancelEventListener);
+            cancel.setOnClickListener(cancelEventListener);
 
-        save.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                /**
-                 * 저장버튼 눌렀을 때의 행동
-                 */
-            }
-        });
+            save.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    /**
+                     * 저장버튼 눌렀을 때의 행동
+                     */
+                }
+            });
 
-        translate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                /**
-                 * 번역버튼 눌렀을 때의 행동
-                 */
-                TranslateHelper translateHelper = TranslateHelper.getInstance(true, "I like coffee");
-                translateHelper.start();
-            }
-        });
+            translate.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    /**
+                     * 번역버튼 눌렀을 때의 행동
+                     */
+                    TranslateHelper translateHelper = TranslateHelper.getInstance(true, "I like coffee");
+                    translateHelper.start();
+                }
+            });
 
-        save.setOnTouchListener(Utils.imageTouchEventListener);
-        translate.setOnTouchListener(Utils.imageTouchEventListener);
-        cancel.setOnTouchListener(Utils.imageTouchEventListener);
-
+            save.setOnTouchListener(Utils.imageTouchEventListener);
+            translate.setOnTouchListener(Utils.imageTouchEventListener);
+            cancel.setOnTouchListener(Utils.imageTouchEventListener);
+        }
     }
 
     /**
@@ -773,7 +777,6 @@ public class FloatingService extends Service {
                 Log.e(TAG, "ss taken");
                 mSoundPool.play(soundID,1,1,0,0,1.0f);
                 Utils.saveScreenShot(capture(mImageReader));
-
                 break;
             case R.id.floatingCropLeft:
             case R.id.floatingCropRight:
@@ -1009,6 +1012,7 @@ public class FloatingService extends Service {
                 floatingBar.setVisibility(View.VISIBLE);
                 windowManager.updateViewLayout(floatingBar, floatingBar.getLayoutParams());
             }
+            isHidden = false;
         } else {
             isHidden = true;
             floatingHead.setVisibility(View.GONE);
