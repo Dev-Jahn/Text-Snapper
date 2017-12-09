@@ -9,8 +9,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.hardware.display.DisplayManager;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
@@ -31,7 +29,6 @@ import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -140,9 +137,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ImageView imageGallery = (ImageView)findViewById(R.id.imageGallery);
         ImageView imageWidget = (ImageView)findViewById(R.id.imageWidget);
 
-        imageCamera.setOnTouchListener(imageClickEventListener);
-        imageGallery.setOnTouchListener(imageClickEventListener);
-        imageWidget.setOnTouchListener(imageClickEventListener);
+        imageCamera.setOnTouchListener(Utils.imageTouchEventListener);
+        imageGallery.setOnTouchListener(Utils.imageTouchEventListener);
+        imageWidget.setOnTouchListener(Utils.imageTouchEventListener);
         imageWidget.setOnClickListener(floatingButtonEventListener);
 
         imageGallery.setOnClickListener(new ButtonClickListener());
@@ -216,34 +213,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return image;
     }
     /**
-     * 버튼을 눌렀을 때 선택되었음을 보여주도록
-     */
-    ImageView.OnTouchListener imageClickEventListener = new ImageView.OnTouchListener() {
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN: {
-                    ImageView view = (ImageView) v;
-                    // overlay 색상 설정
-                    view.getDrawable().setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
-                    view.invalidate();
-                    break;
-                }
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_CANCEL: {
-                    ImageView view = (ImageView) v;
-                    // overlay 색상 제거
-                    view.getDrawable().clearColorFilter();
-                    view.invalidate();
-                    break;
-                }
-            }
-            return false;
-        }
-    };
-
-    /**
      * Floating Button Overlay!
      * 완성된 코드이므로 더 이상 수정할 필요 없음
      */
@@ -276,10 +245,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             viewPager.setCurrentItem(tab.getPosition());
         }
         @Override
-        public void onTabUnselected(TabLayout.Tab tab) { }
+        public void onTabUnselected(TabLayout.Tab tab) {        }
 
         @Override
-        public void onTabReselected(TabLayout.Tab tab) { }
+        public void onTabReselected(TabLayout.Tab tab) {        }
     };
 
     /**

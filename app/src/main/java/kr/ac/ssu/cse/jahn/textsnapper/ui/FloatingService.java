@@ -10,10 +10,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
-import android.graphics.PorterDuff;
 import android.hardware.display.DisplayManager;
 import android.media.AudioAttributes;
 import android.media.Image;
@@ -39,6 +37,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import java.nio.ByteBuffer;
@@ -74,9 +73,9 @@ public class FloatingService extends Service {
     private int soundID = 0;
     private boolean soundLoaded = false;
 
-    private WindowManager windowManager;
-    private RelativeLayout removeHead, floatingHead;
-    private RelativeLayout floatingBar;
+    private static WindowManager windowManager;
+    private static RelativeLayout removeHead, floatingHead;
+    private static RelativeLayout floatingBar;
     private ImageView removeImage, floatingImage;
     private ImageView screenshotImage, cropImage, languageImage;
     private Point windowSize;
@@ -313,6 +312,7 @@ public class FloatingService extends Service {
 
                             int diffX = currentX - initX;
                             int diffY = currentY - initY;
+
                             // X, Y 이동값이 적은 경우는 FloatingBar를 띄우는 액션으로 본다
                             if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5) {
                                 endTime = System.currentTimeMillis();
@@ -321,6 +321,8 @@ public class FloatingService extends Service {
                                     showFloatingBar();
                                 }
                             }
+
+                          //toTopLeft();
                             afterY = marginY + diffY;
 
                             if (afterY < topMax)
@@ -329,6 +331,8 @@ public class FloatingService extends Service {
                                 afterY = bottomMax;
 
                             newFloatingParams.y = afterY;
+
+
                             // 만약 X 이동값이 큰 경우, 벽에 붙인다.
                             if (Math.abs(diffX) >= 5) {
                                 attachSide(currentX);
@@ -411,6 +415,101 @@ public class FloatingService extends Service {
             floatingHeadToRight(currentX);
         }
     }
+
+    /**
+     * 호출시 상단으로 가는데, 수정할 필요가 있음
+     */
+    private void toTopLeft() {
+        if(isBarActive) {
+            showFloatingBar();
+        }
+        new CountDownTimer(100, 5) {
+            WindowManager.LayoutParams mParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
+            public void onTick(long t) {
+                int step = mParams.y / 20;
+                mParams.y -= step;
+                windowManager.updateViewLayout(floatingHead, mParams);
+            }
+            public void onFinish() {
+                mParams.x = 0;
+                mParams.y = 0;
+                windowManager.updateViewLayout(floatingHead, mParams);
+                showResult();
+            }
+        }.start();
+    }
+
+    private void showResult() {
+        /**
+         * 최초 Result PopUp Params 설정
+         */
+        WindowManager.LayoutParams resultParams = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.TYPE_PHONE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                PixelFormat.TRANSLUCENT);
+        resultParams.gravity = Gravity.TOP | Gravity.LEFT;
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+
+        /**
+         * Inflate & FindView
+         */
+        final LinearLayout resultLayout = (LinearLayout)inflater.inflate(R.layout.result_pop_up, null);
+
+        LinearLayout cancelArea = (LinearLayout) resultLayout.findViewById(R.id.cancelArea);
+
+
+        ImageView save = (ImageView)resultLayout.findViewById(R.id.save);
+        ImageView translate = (ImageView)resultLayout.findViewById(R.id.translate);
+        ImageView cancel = (ImageView)resultLayout.findViewById(R.id.cancel);
+
+
+
+        resultParams.x = 0;
+        resultParams.y = 0;
+        windowManager.addView(resultLayout, resultParams);
+
+
+        /**
+         * Event Listener 설정
+         */
+        View.OnClickListener cancelEventListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                windowManager.removeView(resultLayout);
+            }
+        };
+        cancelArea.setOnClickListener(cancelEventListener);
+        cancel.setOnClickListener(cancelEventListener);
+
+        save.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /**
+                 * 저장버튼 눌렀을 때의 행동
+                 */
+            }
+        });
+
+        translate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /**
+                 * 번역버튼 눌렀을 때의 행동
+                 */
+            }
+        });
+
+        save.setOnTouchListener(Utils.imageTouchEventListener);
+        translate.setOnTouchListener(Utils.imageTouchEventListener);
+        cancel.setOnTouchListener(Utils.imageTouchEventListener);
+
+    }
+
     /**
      * Long Click을 진행했을 때
      * Floating Button을 삭제할 수 있는 Remove Head를 보여줌
@@ -530,11 +629,11 @@ public class FloatingService extends Service {
                     isEng = false;
                 }
 
-                screenshotImage.setOnTouchListener(imageTouchEventListener);
+                screenshotImage.setOnTouchListener(Utils.imageTouchEventListener);
                 screenshotImage.setOnClickListener(imageClickEventListener);
-                cropImage.setOnTouchListener(imageTouchEventListener);
+                cropImage.setOnTouchListener(Utils.imageTouchEventListener);
                 cropImage.setOnClickListener(imageClickEventListener);
-                languageImage.setOnTouchListener(imageTouchEventListener);
+                languageImage.setOnTouchListener(Utils.imageTouchEventListener);
 
                 languageImage.setOnClickListener(new ImageView.OnClickListener() {
                     @Override
@@ -654,35 +753,6 @@ public class FloatingService extends Service {
         }
     }
 
-
-    /**
-     * 버튼을 눌렀을 때 선택되었음을 보여주도록
-     */
-    ImageView.OnTouchListener imageTouchEventListener = new ImageView.OnTouchListener() {
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN: {
-                    ImageView view = (ImageView) v;
-                    // overlay 색상 설정
-                    view.getDrawable().setColorFilter(Color.GRAY, PorterDuff.Mode.MULTIPLY);
-                    view.invalidate();
-                    break;
-                }
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_CANCEL: {
-                    ImageView view = (ImageView) v;
-                    // overlay 색상 제거
-                    view.getDrawable().clearColorFilter();
-                    view.invalidate();
-                    break;
-                }
-            }
-            return false;
-        }
-    };
-
     /**
      * drawer의 버튼을 눌렀을 때의 동작
      */
@@ -703,15 +773,7 @@ public class FloatingService extends Service {
                 break;
             case R.id.floatingCropLeft:
             case R.id.floatingCropRight:
-                CropView cv = new CropView(thisService, windowSize.x, windowSize.y, windowManager);
-                WindowManager.LayoutParams cropParams = new WindowManager.LayoutParams(
-                        windowSize.x,
-                        windowSize.y,
-                        WindowManager.LayoutParams.TYPE_PHONE,
-                        WindowManager.LayoutParams.FLAG_FULLSCREEN,// |
-                        //WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                        PixelFormat.RGBA_8888);
-                windowManager.addView(cv,cropParams);
+                showFloatingBar();
                 break;
             }
         }
@@ -889,11 +951,7 @@ public class FloatingService extends Service {
             case Configuration.ORIENTATION_PORTRAIT:
                 break;
         }
-
-
     }
-
-
     /**
      * 생명주기 Destory 당시 붙였던 view들을 제거
      * + 리소스 해제작업
@@ -908,10 +966,9 @@ public class FloatingService extends Service {
         if(removeHead != null) {
             windowManager.removeView(removeHead);
         }
-        if(floatingBar != null) {
-            windowManager.removeView(floatingBar);
-        }
-        // SoundPool 할당 해제
+        /**
+         * SoundPool 할당 해제
+         */
         mSoundPool.release();
         mSoundPool = null;
         soundID = 0;
@@ -940,7 +997,7 @@ public class FloatingService extends Service {
      * Crop Activity에서 호출바람
      * 주 : 1회 호출시 hide, 2회 호출시 다시 show
      */
-    protected void hide() {
+    protected static void hide() {
         if(isHidden) {
             floatingHead.setVisibility(View.VISIBLE);
             windowManager.updateViewLayout(floatingHead, floatingHead.getLayoutParams());
@@ -950,10 +1007,10 @@ public class FloatingService extends Service {
             }
         } else {
             isHidden = true;
-            floatingHead.setVisibility(View.INVISIBLE);
+            floatingHead.setVisibility(View.GONE);
             windowManager.updateViewLayout(floatingHead, floatingHead.getLayoutParams());
             if(isBarActive) {
-                floatingBar.setVisibility(View.INVISIBLE);
+                floatingBar.setVisibility(View.GONE);
                 windowManager.updateViewLayout(floatingBar, floatingBar.getLayoutParams());
             }
         }

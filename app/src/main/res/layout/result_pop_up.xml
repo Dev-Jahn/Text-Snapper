@@ -1,25 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/resultLayout"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    >
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:id="@+id/cancelArea"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:backgroundTint="@color/light_divider"
+        android:backgroundTintMode="multiply"
+        >
+    </LinearLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="5"
-        android:background="@drawable/outline_bottom"
+        android:background="@drawable/high_material_shadow"
         >
         <ImageView
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:src="@drawable/test"
+            android:adjustViewBounds="true"/>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="6"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="@drawable/material_shadow">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -39,32 +56,31 @@
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:orientation="horizontal"
+        android:gravity="center"
         android:background="@drawable/material_shadow">
 
         <ImageView
+            android:id="@+id/save"
             android:layout_width="80dp"
             android:layout_height="40dp"
             android:src="@drawable/save"
-            android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"/>
+            android:layout_marginRight="24dp"
+            />
         <ImageView
+            android:id="@+id/translate"
             android:layout_width="80dp"
             android:layout_height="40dp"
             android:src="@drawable/translate"
             android:layout_marginLeft="24dp"
-            android:layout_marginRight="24dp"/>
+            android:layout_marginRight="24dp"
+            />
         <ImageView
+            android:id="@+id/cancel"
             android:layout_width="80dp"
             android:layout_height="40dp"
             android:src="@drawable/cancel"
-            android:layout_marginLeft="24dp" />
+            android:layout_marginLeft="24dp"
+            />
 
     </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="80dp"/>
-
-
-
 </LinearLayout>
