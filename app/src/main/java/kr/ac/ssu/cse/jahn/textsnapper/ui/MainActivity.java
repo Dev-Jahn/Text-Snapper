@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .setExportDir(Utils.EDIT_PATH)
                 .setExportPrefix("result_")
                 .setSavePolicy(
-                        EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT
+                        EditorSaveSettings.SavePolicy.RETURN_ALWAYS_ONLY_OUTPUT
                 );
 
         customizeConfig(settingsList);
@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         TransformEditorTool transform = new TransformEditorTool(R.string.imgly_tool_name_crop, R.drawable.imgly_icon_tool_transform);
         ColorAdjustmentTool adjustTool = new ColorAdjustmentTool(R.string.imgly_tool_name_adjust, R.drawable.imgly_icon_tool_adjust);
         ColorAdjustmentSettings adjust = settingsList.getSettingsModel(ColorAdjustmentSettings.class);
-        adjust.setBrightness(0.3f);
+        adjust.setBrightness(-0.7f);
         adjust.setContrast(2.0f);
         adjust.setSaturation(-1.0f);
         adjust.setClarity(1.0f);
@@ -270,6 +270,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 String sourcePath =
                         data.getStringExtra(ImgLyIntent.SOURCE_IMAGE_PATH);
 
+                if (sourcePath != null) {
+                    // Scan camera file
+                    File file =  new File(sourcePath);
+                    Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    photoUri = Uri.fromFile(file);
+                    scanIntent.setData(photoUri);
+                    sendBroadcast(scanIntent);
+                }
+
                 if (resultPath != null) {
                     // Scan result file
                     File file =  new File(resultPath);
@@ -279,14 +288,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     sendBroadcast(scanIntent);
                 }
 
-                if (sourcePath != null) {
-                    // Scan camera file
-                    File file =  new File(sourcePath);
-                    Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                    photoUri = Uri.fromFile(file);
-                    scanIntent.setData(photoUri);
-                    sendBroadcast(scanIntent);
-                }
+
                 Log.e("TAG","onActivityResult(): 카메라 & 에디트"+photoUri);
                 Intent result = new Intent(this, TestActivity.class);
                 result.setDataAndType(photoUri,"image/*");

@@ -28,7 +28,6 @@ import android.util.Log;
 @SuppressWarnings("WeakerAccess")
 public class Box {
     static {
-        System.loadLibrary("jpgt");
         System.loadLibrary("pngt");
         System.loadLibrary("lept");
     }

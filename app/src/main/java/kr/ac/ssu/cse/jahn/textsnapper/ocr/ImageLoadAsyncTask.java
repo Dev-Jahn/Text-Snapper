@@ -11,6 +11,12 @@ import com.googlecode.leptonica.android.Pix;
 import com.googlecode.leptonica.android.ReadFile;
 import com.googlecode.leptonica.android.Scale;
 
+import java.io.File;
+/*
+import com.googlecode.leptonica.android.Pix;
+import com.googlecode.leptonica.android.ReadFile;
+import com.googlecode.leptonica.android.Scale;*/
+
 /**
  * Created by CypressRH on 2017-11-16.
  * Uri를 받아 이미지파일을 Pix타입으로 로드하기 위한 AsyncTask
@@ -97,7 +103,7 @@ public class ImageLoadAsyncTask extends AsyncTask<Void, Void, ImageLoadAsyncTask
         //Picasso라이브러리로 Uri를 읽어 bitmap으로 변환.
         //leptonica로 bitmap을 pix로 변환
         Pix p;
-        p = ReadFile.loadWithPicasso(mContext, photoUri);
+        p = ReadFile.readFile(new File(photoUri.getPath()));
         if (p == null)
         {
             Log.i(TAG,"could not load image.");
