@@ -61,7 +61,7 @@
                 android:resource="@xml/provider_paths"/>
         </provider>
 
-        <activity android:name=".ui.TestActivity">
+        <activity android:name=".ui.ResultActivity">
         </activity>
         <activity android:name=".ui.CropActivity">
         </activity>

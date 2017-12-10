@@ -1,6 +1,7 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ui;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -196,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         new CameraPreviewBuilder(this)
                 .setSettingsList(settingsList)
-                .startActivityForResult(this, REQUEST_CAMERA);
+                .startActivityForResult(new Activity(), REQUEST_CAMERA);
     }
     public void startEditor(String path) {
         SettingsList settingsList = new SettingsList();
@@ -290,7 +291,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                 Log.e("TAG","onActivityResult(): 카메라 & 에디트"+photoUri);
-                Intent result = new Intent(this, TestActivity.class);
+                Intent result = new Intent(this, ResultActivity.class);
                 result.setDataAndType(photoUri,"image/*");
                 result.putExtra("imagesource", ImageSource.CROP);
                 startActivity(result);
