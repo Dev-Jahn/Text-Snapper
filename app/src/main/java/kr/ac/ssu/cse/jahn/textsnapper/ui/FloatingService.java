@@ -100,7 +100,7 @@ public class FloatingService extends Service {
 
     protected IOCRService mBinder = null;
     protected Pix mFinalPix;
-    protected String mOCRedString;
+    protected String mResultString;
     protected Uri uriForOCR;
     protected ImageView mResultImage;
     private boolean _binded = false;
@@ -117,7 +117,6 @@ public class FloatingService extends Service {
             Log.e(TAG, "Service Connected");
             mBinder = IOCRService.Stub.asInterface(service);
             _binded = true;
-            startOCR();
         }
 
         @Override
@@ -151,7 +150,7 @@ public class FloatingService extends Service {
                 }
                 break;
             case OCRProcessor.MESSAGE_UTF8_TEXT:
-                mOCRedString = (String) msg.obj;
+                mResultString = (String) msg.obj;
                 break;
             case OCRProcessor.MESSAGE_END:
                 attachTop();
@@ -423,7 +422,7 @@ public class FloatingService extends Service {
 
                             int diffX = currentX - initX;
                             int diffY = currentY - initY;
-/*
+
                             // X, Y 이동값이 적은 경우는 FloatingBar를 띄우는 액션으로 본다
                             if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5) {
                                 endTime = System.currentTimeMillis();
@@ -437,8 +436,8 @@ public class FloatingService extends Service {
  * 개발중인 기능 Test Code
  */
 
-    attachTop();
-    showResult();
+    //attachTop();
+    //showResult();
 
 
 
@@ -1014,7 +1013,7 @@ public class FloatingService extends Service {
             public void handleMessage(Message msg)
             {
                 Intent i = new Intent();
-
+                Utils.startEditor(msg.getData().getString("path"),MainActivity.mActivity);
                 Log.e(TAG, "파일생성 감지: "+msg.getData().getString("path"));
                 //startActivity(i);
             }
@@ -1038,6 +1037,7 @@ public class FloatingService extends Service {
                 if (!MainActivity.isForeground)
                 {
                     uriForOCR = Uri.fromFile(new File(msg.getData().getString("path")));
+                    startOCR();
                 }
             }
         };

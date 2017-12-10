@@ -40,27 +40,16 @@ import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.ImageSource;
 import kr.ac.ssu.cse.jahn.textsnapper.util.PrefUtils;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
-import ly.img.android.sdk.models.config.CropAspectConfig;
-import ly.img.android.sdk.models.config.Divider;
-import ly.img.android.sdk.models.state.CameraSettings;
-import ly.img.android.sdk.models.state.ColorAdjustmentSettings;
-import ly.img.android.sdk.models.state.EditorLoadSettings;
-import ly.img.android.sdk.models.state.EditorSaveSettings;
-import ly.img.android.sdk.models.state.manager.SettingsList;
-import ly.img.android.sdk.tools.ColorAdjustmentTool;
-import ly.img.android.sdk.tools.TransformEditorTool;
-import ly.img.android.ui.activities.CameraPreviewBuilder;
 import ly.img.android.ui.activities.ImgLyIntent;
-import ly.img.android.ui.activities.PhotoEditorBuilder;
 
 import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.APP_PATH;
 import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.copyTessdata;
+import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.startEditor;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     public static int statusbarHeight;
-
     public static final int REQUEST_CAMERA = 100;
     public static final int REQUEST_GALLERY = 101;
     public static final int REQUEST_EDIT = 102;
@@ -83,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected int mHeight;
     private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC;
     protected static boolean isForeground = false;
+    public static Activity mActivity;
 
     ActionBarDrawerToggle toggle;
     ViewPager viewPager;
@@ -90,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        mActivity = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //상단바 높이 저장
@@ -166,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startGallery();
                 break;
             case R.id.imageCamera:
-                startCamera();
+                Utils.startCamera(mActivity);
                 break;
             }
         }
@@ -177,64 +168,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, REQUEST_GALLERY);
     }
-    public void startCamera() {
-        Log.e("TAG", "Start Camera");
-        SettingsList settingsList = new SettingsList();
-        settingsList
-                // Set custom camera export settings
-                .getSettingsModel(CameraSettings.class)
-                .setExportDir(Utils.CAMERA_PATH)
-                .setExportPrefix("camera_")
-                // Set custom editor export settings
-                .getSettingsModel(EditorSaveSettings.class)
-                .setExportDir(Utils.EDIT_PATH)
-                .setExportPrefix("result_")
-                .setSavePolicy(
-                        EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT
-                );
-        customizeConfig(settingsList);
 
-        new CameraPreviewBuilder(this)
-                .setSettingsList(settingsList)
-                .startActivityForResult(new Activity(), REQUEST_CAMERA);
-    }
-    public void startEditor(String path) {
-        SettingsList settingsList = new SettingsList();
-        settingsList
-                .getSettingsModel(EditorLoadSettings.class)
-                .setImageSourcePath(path, true) // Load with delete protection true!
-                .getSettingsModel(EditorSaveSettings.class)
-                .setExportDir(Utils.EDIT_PATH)
-                .setExportPrefix("result_")
-                .setSavePolicy(
-                        EditorSaveSettings.SavePolicy.RETURN_ALWAYS_ONLY_OUTPUT
-                );
-
-        customizeConfig(settingsList);
-        new PhotoEditorBuilder(this)
-                .setSettingsList(settingsList)
-                .startActivityForResult(this, REQUEST_EDIT);
-    }
-
-    public void customizeConfig(SettingsList settingsList) {
-        settingsList.getConfig().setFilters();
-
-        TransformEditorTool transform = new TransformEditorTool(R.string.imgly_tool_name_crop, R.drawable.imgly_icon_tool_transform);
-        ColorAdjustmentTool adjustTool = new ColorAdjustmentTool(R.string.imgly_tool_name_adjust, R.drawable.imgly_icon_tool_adjust);
-        ColorAdjustmentSettings adjust = settingsList.getSettingsModel(ColorAdjustmentSettings.class);
-        adjust.setBrightness(-0.7f);
-        adjust.setContrast(2.0f);
-        adjust.setSaturation(-1.0f);
-        adjust.setClarity(1.0f);
-        settingsList.getConfig().setTools(
-                transform,
-                new Divider(),
-                new Divider(),
-                new Divider(),
-                new Divider(),
-                adjustTool
-        ).setAspects(CropAspectConfig.FREE_CROP);
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -261,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 data.putExtra("resultcode", resultCode);
                 break;
             case REQUEST_GALLERY:
-                startEditor(Utils.getRealPathFromUri(this, photoUri));
+                startEditor(Utils.getRealPathFromUri(this, photoUri),mActivity);
                 break;
             case REQUEST_CAMERA:
             case REQUEST_EDIT:

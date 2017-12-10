@@ -40,6 +40,23 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import kr.ac.ssu.cse.jahn.textsnapper.R;
+import ly.img.android.sdk.models.config.CropAspectConfig;
+import ly.img.android.sdk.models.config.Divider;
+import ly.img.android.sdk.models.state.CameraSettings;
+import ly.img.android.sdk.models.state.ColorAdjustmentSettings;
+import ly.img.android.sdk.models.state.EditorLoadSettings;
+import ly.img.android.sdk.models.state.EditorSaveSettings;
+import ly.img.android.sdk.models.state.manager.SettingsList;
+import ly.img.android.sdk.tools.ColorAdjustmentTool;
+import ly.img.android.sdk.tools.TransformEditorTool;
+import ly.img.android.ui.activities.CameraPreviewBuilder;
+import ly.img.android.ui.activities.PhotoEditorBuilder;
+
+import static kr.ac.ssu.cse.jahn.textsnapper.ui.MainActivity.REQUEST_CAMERA;
+import static kr.ac.ssu.cse.jahn.textsnapper.ui.MainActivity.REQUEST_EDIT;
+
 /**
  * Created by ArchSlave on 2017-11-05.
  */
@@ -302,5 +319,64 @@ public class Utils {
             cursor.close();
         }
         return result;
+    }
+
+    public static void startCamera(Activity activity) {
+        Log.e("TAG", "Start Camera");
+        SettingsList settingsList = new SettingsList();
+        settingsList
+                // Set custom camera export settings
+                .getSettingsModel(CameraSettings.class)
+                .setExportDir(Utils.CAMERA_PATH)
+                .setExportPrefix("camera_")
+                // Set custom editor export settings
+                .getSettingsModel(EditorSaveSettings.class)
+                .setExportDir(Utils.EDIT_PATH)
+                .setExportPrefix("result_")
+                .setSavePolicy(
+                        EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT
+                );
+        customizeConfig(settingsList);
+
+        new CameraPreviewBuilder(activity)
+                .setSettingsList(settingsList)
+                .startActivityForResult(activity, REQUEST_CAMERA);
+    }
+    public static void startEditor(String path, Activity activity) {
+        SettingsList settingsList = new SettingsList();
+        settingsList
+                .getSettingsModel(EditorLoadSettings.class)
+                .setImageSourcePath(path, true) // Load with delete protection true!
+                .getSettingsModel(EditorSaveSettings.class)
+                .setExportDir(Utils.EDIT_PATH)
+                .setExportPrefix("result_")
+                .setSavePolicy(
+                        EditorSaveSettings.SavePolicy.RETURN_ALWAYS_ONLY_OUTPUT
+                );
+
+        customizeConfig(settingsList);
+        new PhotoEditorBuilder(activity)
+                .setSettingsList(settingsList)
+                .startActivityForResult(activity, REQUEST_EDIT);
+    }
+
+    public static void customizeConfig(SettingsList settingsList) {
+        settingsList.getConfig().setFilters();
+
+        TransformEditorTool transform = new TransformEditorTool(R.string.imgly_tool_name_crop, R.drawable.imgly_icon_tool_transform);
+        ColorAdjustmentTool adjustTool = new ColorAdjustmentTool(R.string.imgly_tool_name_adjust, R.drawable.imgly_icon_tool_adjust);
+        ColorAdjustmentSettings adjust = settingsList.getSettingsModel(ColorAdjustmentSettings.class);
+        adjust.setBrightness(-0.7f);
+        adjust.setContrast(2.0f);
+        adjust.setSaturation(-1.0f);
+        adjust.setClarity(1.0f);
+        settingsList.getConfig().setTools(
+                transform,
+                new Divider(),
+                new Divider(),
+                new Divider(),
+                new Divider(),
+                adjustTool
+        ).setAspects(CropAspectConfig.FREE_CROP);
     }
 }
