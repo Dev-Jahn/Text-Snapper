@@ -31,7 +31,8 @@ public class TranslateHelper extends Thread {
 
     private static boolean isEng;
 
-    private static Handler handler = new Handler();
+    private static Handler watchHandler = new Handler();
+    private static Runnable translateRunnable;
 
     private static String sourceLang;
     private static String targetLang;
@@ -54,6 +55,10 @@ public class TranslateHelper extends Thread {
         translateHelper.setOriginalText(originalText);
 
         return translateHelper;
+    }
+
+    public static void setTranslateRunnable(Runnable runnable) {
+        translateRunnable = runnable;
     }
 
     /**
@@ -123,8 +128,11 @@ public class TranslateHelper extends Thread {
             resultText = parse(serverResponse);
 
             /**
-             * handler.post를 이용해서 UI에 직접 뿌려주면 완성
+             * watchHandler.post를 이용해서 UI에 직접 뿌려주면 완성
              */
+            if(translateRunnable != null) {
+                watchHandler.post(translateRunnable);
+            }
 
             Log.d("TRANSLATE", resultText);
 

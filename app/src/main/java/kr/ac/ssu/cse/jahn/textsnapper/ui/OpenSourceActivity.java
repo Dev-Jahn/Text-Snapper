@@ -19,8 +19,6 @@ public class OpenSourceActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_opensource);
     }
-
-
     /**
      * 아래 2개의 메소드는 Back Button 붙이는 코드
      */

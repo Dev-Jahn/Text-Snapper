@@ -48,7 +48,7 @@
                         android:id="@+id/imageCamera"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:src="@mipmap/image_camera"
+                        android:src="@drawable/image_camera"
                         android:background="?android:attr/selectableItemBackground"
                         android:clickable="true"/>
                 </LinearLayout>
@@ -61,6 +61,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:textStyle="bold"
                         android:text="Camera"/>
                 </LinearLayout>
             </LinearLayout>
@@ -91,7 +92,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Gallery" />
+                        android:text="Gallery"
+                        android:textStyle="bold"/>
                 </LinearLayout>
             </LinearLayout>
 
@@ -122,7 +124,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Floating Button"/>
+                        android:text="Floating Button"
+                        android:textStyle="bold"/>
                 </LinearLayout>
 
             </LinearLayout>

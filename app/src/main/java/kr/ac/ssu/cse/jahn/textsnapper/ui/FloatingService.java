@@ -151,8 +151,6 @@ public class FloatingService extends Service {
                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSLUCENT);
 
-
-
         floatingParams.gravity = Gravity.TOP | Gravity.LEFT;
         /**
          * Floating Button의 초기 위치 설정 코드
@@ -332,10 +330,16 @@ public class FloatingService extends Service {
                                     showFloatingBar();
                                 }
                             }
+
 /**
- * 개발중인 기능 : attachTop()
+ * 개발중인 기능 Test Code
  */
-                          //attachTop();
+/**
+    attachTop();
+    showResult();
+ */
+
+
                             afterY = marginY + diffY;
 
                             if (afterY < topMax)
@@ -454,7 +458,7 @@ public class FloatingService extends Service {
                     WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.TYPE_PHONE,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                    //WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                             WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
                             WindowManager.LayoutParams.FLAG_DIM_BEHIND |
                             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
@@ -468,15 +472,15 @@ public class FloatingService extends Service {
              * Inflate & FindView
              */
             final LinearLayout resultLayout = (LinearLayout) inflater.inflate(R.layout.result_pop_up, null);
-
             LinearLayout cancelArea = (LinearLayout) resultLayout.findViewById(R.id.cancelArea);
-
-
             ImageView save = (ImageView) resultLayout.findViewById(R.id.save);
-            ImageView translate = (ImageView) resultLayout.findViewById(R.id.translate);
+            final ImageView translate = (ImageView) resultLayout.findViewById(R.id.translate);
             ImageView cancel = (ImageView) resultLayout.findViewById(R.id.cancel);
             final EditText editText = (EditText) resultLayout.findViewById(R.id.editText);
 
+            /**
+             * View 위치 설정 및 추가
+             */
             resultParams.x = 0;
             resultParams.y = 0;
             windowManager.addView(resultLayout, resultParams);
@@ -489,7 +493,7 @@ public class FloatingService extends Service {
                 @Override
                 public void onClick(View v) {
                     /**
-                     * Cancel Area또는 Cancel 버튼 눌렀을 때의 행동
+                     * Cancel Area 또는 Cancel 버튼 눌렀을 때의 행동
                      */
                     windowManager.removeView(resultLayout);
                     isResultPopup = false;
@@ -497,7 +501,6 @@ public class FloatingService extends Service {
             };
             cancelArea.setOnClickListener(cancelEventListener);
             cancel.setOnClickListener(cancelEventListener);
-
             save.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -508,18 +511,35 @@ public class FloatingService extends Service {
             });
 
             translate.setOnClickListener(new View.OnClickListener() {
+                boolean isTranslated = false;
+                String originalText = editText.getText().toString();
+                /**
+                 * 번역버튼 눌렀을 때의 행동
+                 */
                 @Override
                 public void onClick(View v) {
-                    /**
-                     * 번역버튼 눌렀을 때의 행동
-                     */
-                    String originalText = editText.getText().toString();
-                    TranslateHelper translateHelper = TranslateHelper.getInstance(true, "Hello, Strengthful and Strong morning! If you ask me, I'm walldo");
-                    //TranslateHelper translateHelper = TranslateHelper.getInstance(isEng, originalText);
-                    translateHelper.start();
+                    String currentText = editText.getText().toString();
+                    if(!isTranslated) {
+                        boolean isEng = PrefUtils.isEng(getApplicationContext());
+                        final TranslateHelper translateHelper = TranslateHelper.getInstance(isEng, currentText);
+                        originalText = currentText;
+                        Runnable translateRunnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                editText.setText(translateHelper.getResultText());
+                                translate.setImageResource(R.drawable.undo);
+                                isTranslated = true;
+                            }
+                        };
+                        translateHelper.setTranslateRunnable(translateRunnable);
+                        translateHelper.start();
+                    } else {
+                        editText.setText(originalText);
+                        translate.setImageResource(R.drawable.translate);
+                        isTranslated = false;
+                    }
                 }
             });
-
             save.setOnTouchListener(Utils.imageTouchEventListener);
             translate.setOnTouchListener(Utils.imageTouchEventListener);
             cancel.setOnTouchListener(Utils.imageTouchEventListener);
