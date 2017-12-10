@@ -9,12 +9,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
-import android.hardware.display.DisplayManager;
 import android.media.AudioAttributes;
-import android.media.Image;
 import android.media.ImageReader;
 import android.media.SoundPool;
 import android.media.projection.MediaProjection;
@@ -28,9 +25,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -40,12 +35,14 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
-import java.nio.ByteBuffer;
-
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
 import static android.content.ContentValues.TAG;
+import static android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN;
+import static android.view.WindowManager.LayoutParams.TYPE_PHONE;
+import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.capture;
+import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.createVirtualDisplay;
 
 public class FloatingService extends Service {
 
@@ -57,17 +54,13 @@ public class FloatingService extends Service {
     private static boolean canDrawBar;
     private static boolean cannotMove;
     private static boolean isHidden;
+    private static boolean _cropmode;
 
     protected FileObserver mObserver;
     private Handler mFileHandler;
     protected MediaProjectionManager mProjectionManager;
     protected MediaProjection mProjection;
     protected ImageReader mImageReader;
-    protected Display mDisplay;
-    protected int mDensity;
-    protected int mWidth;
-    protected int mHeight;
-    private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC;
 
     private SoundPool mSoundPool;
     private int soundID = 0;
@@ -76,6 +69,7 @@ public class FloatingService extends Service {
     private static WindowManager windowManager;
     private static RelativeLayout removeHead, floatingHead;
     private static RelativeLayout floatingBar;
+    private static CropView mCropView;
     private ImageView removeImage, floatingImage;
     private ImageView screenshotImage, cropImage, languageImage;
     private Point windowSize;
@@ -145,8 +139,6 @@ public class FloatingService extends Service {
                         WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSLUCENT);
-
-
 
         floatingParams.gravity = Gravity.TOP | Gravity.LEFT;
         /**
@@ -356,7 +348,15 @@ public class FloatingService extends Service {
                             endTime = System.currentTimeMillis();
                             if ((endTime - startTime) < 500) {
                                 // click 했을 때 리스트 띄우는 코드
-                                showFloatingBar();
+                                // 크롭모드 도중에 클릭하면 플로팅바 띄우지않고
+                                if (!_cropmode)
+                                    showFloatingBar();
+                                else
+                                {
+                                    mCropView.getCurrentRect();
+                                    mCropView.collapse();
+                                }
+
                             }
                             break;
                     }
@@ -446,7 +446,7 @@ public class FloatingService extends Service {
         WindowManager.LayoutParams resultParams = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.TYPE_PHONE,
+                TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                         WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
@@ -659,7 +659,7 @@ public class FloatingService extends Service {
                 WindowManager.LayoutParams barParams = new WindowManager.LayoutParams(
                         WindowManager.LayoutParams.WRAP_CONTENT,
                         WindowManager.LayoutParams.WRAP_CONTENT,
-                        WindowManager.LayoutParams.TYPE_PHONE,
+                        TYPE_PHONE,
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                                 WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
                                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
@@ -768,12 +768,39 @@ public class FloatingService extends Service {
             case R.id.floatingScreentshotRight:
                 Log.e(TAG, "ss taken");
                 mSoundPool.play(soundID,1,1,0,0,1.0f);
-                Utils.saveScreenShot(capture(mImageReader));
-
+                toggleHide();
+                Handler handler = new Handler();
+                Runnable shot = new Runnable() {
+                    @Override
+                    public void run() {
+                        Utils.saveScreenShot(capture(mImageReader, windowManager.getDefaultDisplay()));
+                    }
+                };
+                handler.postDelayed(shot, 100);
+                Runnable restore = new Runnable() {
+                    @Override
+                    public void run() {
+                        toggleHide();
+                    }
+                };
+                handler.postDelayed(restore, 100);
                 break;
             case R.id.floatingCropLeft:
             case R.id.floatingCropRight:
-                showFloatingBar();
+                if (!_cropmode)
+                {
+                    _cropmode = true;
+                    mCropView = new CropView(thisService, windowSize.x, windowSize.y, windowManager);
+                    WindowManager.LayoutParams cropParams = new WindowManager.LayoutParams(
+                            windowSize.x,
+                            windowSize.y,
+                            TYPE_PHONE,
+                            FLAG_FULLSCREEN,
+                            PixelFormat.RGBA_8888);
+                    windowManager.addView(mCropView,cropParams);
+                    showFloatingBar();
+                }
+
                 break;
             }
         }
@@ -822,42 +849,9 @@ public class FloatingService extends Service {
         mObserver = new ScreenshotObserver(path, mFileHandler);
         mObserver.startWatching();
         Log.e(TAG,"FileObserver started watching");
-
     }
 
-    private void createVirtualDisplay()
-    {
-        Log.e(TAG,"Virtual display created");
-        DisplayMetrics metrics = getResources().getDisplayMetrics();
-        mDensity = metrics.densityDpi;
-        mDisplay = windowManager.getDefaultDisplay();
 
-        // get width and height
-        Point size = new Point();
-        mDisplay.getSize(size);
-        mWidth = size.x;
-        mHeight = size.y;
-
-        mImageReader = ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 2);
-        mProjection.createVirtualDisplay("screen-mirror", mWidth, mHeight, mDensity, VIRTUAL_DISPLAY_FLAGS, mImageReader.getSurface(), null, null);
-    }
-
-    private Bitmap capture(ImageReader reader)
-    {
-        Log.e(TAG, "Capture");
-        Image image = reader.acquireLatestImage();
-        final Image.Plane[] planes = image.getPlanes();
-        final ByteBuffer buffer = planes[0].getBuffer();
-        int offset = 0;
-        int pixelStride = planes[0].getPixelStride();
-        int rowStride = planes[0].getRowStride();
-        int rowPadding = rowStride - pixelStride * mWidth;
-        // create bitmap
-        Bitmap bmp = Bitmap.createBitmap(mWidth+rowPadding/pixelStride, mHeight, Bitmap.Config.ARGB_8888);
-        bmp.copyPixelsFromBuffer(buffer);
-        image.close();
-        return bmp;
-    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -874,12 +868,14 @@ public class FloatingService extends Service {
             Notification notification = createNotification(pendingIntent);
             // Notification 시작
             startForeground(FOREGROUND_ID, notification);
-
+            //파일옵저버 시작
             setFileObserver();
+            //미디어프로젝션 권한요청 및 초기화
             final Intent pIntent = intent.getParcelableExtra("projection");
             final int resultCode = pIntent.getIntExtra("resultcode",0);
             mProjection = mProjectionManager.getMediaProjection(resultCode, pIntent);
-            createVirtualDisplay();
+            mImageReader = createVirtualDisplay(mProjection, getResources().getDisplayMetrics(), windowManager.getDefaultDisplay());
+            //사운드풀 생성 및 오디오리소스 로딩
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -899,7 +895,7 @@ public class FloatingService extends Service {
                     soundID = mSoundPool.load(getBaseContext(),R.raw.shutter,1);
                 }
             }).start();
-
+            //UI 처리 시작
             handleStart();
             return super.onStartCommand(intent, flags, startId);
         } else {
@@ -995,9 +991,9 @@ public class FloatingService extends Service {
 
     /**
      * Crop Activity에서 호출바람
-     * 주 : 1회 호출시 hide, 2회 호출시 다시 show
+     * 주 : 1회 호출시 toggleHide, 2회 호출시 다시 show
      */
-    protected static void hide() {
+    protected static void toggleHide() {
         if(isHidden) {
             floatingHead.setVisibility(View.VISIBLE);
             windowManager.updateViewLayout(floatingHead, floatingHead.getLayoutParams());
@@ -1005,6 +1001,7 @@ public class FloatingService extends Service {
                 floatingBar.setVisibility(View.VISIBLE);
                 windowManager.updateViewLayout(floatingBar, floatingBar.getLayoutParams());
             }
+            isHidden = false;
         } else {
             isHidden = true;
             floatingHead.setVisibility(View.GONE);
@@ -1020,4 +1017,10 @@ public class FloatingService extends Service {
         cannotMove = option;
     }
 
+    public static void set_cropmode(boolean _cropmode)
+    {
+        FloatingService._cropmode = _cropmode;
+        if (!_cropmode)
+            mCropView = null;
+    }
 }

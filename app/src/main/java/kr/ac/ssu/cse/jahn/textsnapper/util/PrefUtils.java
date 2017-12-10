@@ -20,7 +20,7 @@ public class PrefUtils
         return applicationContext.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
     }
 
-    public static String getTessDir(Context appContext)
+    public static String getAppDir(Context appContext)
     {
         SharedPreferences prefs = getPreferences(appContext);
         return prefs.getString(PREFERENCES_TRAINING_DATA_DIR, null);

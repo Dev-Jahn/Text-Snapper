@@ -118,7 +118,7 @@ public class RecentFilesFragment extends Fragment {
     }
 
     public void updateAdapterList() {
-        File curDir = new File(Utils.DATA_PATH);
+        File curDir = new File(Utils.APP_PATH);
         mList.clear();
         File[] curFiles = curDir.listFiles();
 

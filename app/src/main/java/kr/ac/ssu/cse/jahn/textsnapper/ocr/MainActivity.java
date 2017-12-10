@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -207,21 +206,7 @@ public class MainActivity extends AppCompatActivity
             Log.v(TAG, "User cancelled");
         }
     }
-    private String getRealPathFromUri(Uri contentUri)
-    {
-        String result;
-        Cursor cursor = getApplicationContext().getContentResolver().query(contentUri, null, null, null, null);
-        if (cursor == null)
-            result = contentUri.getPath();
-        else
-        {
-            cursor.moveToFirst();
-            int indx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-            result = cursor.getString(indx);
-            cursor.close();
-        }
-        return result;
-    }
+
     @Override
     protected void onSaveInstanceState(Bundle outState)
     {

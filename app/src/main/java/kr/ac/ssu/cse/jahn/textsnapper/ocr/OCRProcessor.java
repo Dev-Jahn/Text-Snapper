@@ -146,7 +146,7 @@ public class OCRProcessor implements TessBaseAPI.ProgressNotifier
             {
                 try
                 {
-                    final String tessDir = Utils.getTessDir(context);
+                    final String tessDir = Utils.getAppDir(context);
                     long nativeTextPix = textpix.getNativePix();
                     Pix pixText = new Pix(nativeTextPix);
                     mOriginalHeight = textpix.getHeight();
