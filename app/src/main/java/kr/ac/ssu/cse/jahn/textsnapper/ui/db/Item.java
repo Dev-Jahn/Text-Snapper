@@ -38,7 +38,7 @@ public class Item implements Comparable<Item> {
     @Override
     public int compareTo(Item item) {
         if(fileName != null) {
-            return fileDate.toLowerCase().compareTo(item.getFileDate().toLowerCase());
+            return fileDate.compareTo(item.getFileDate());
         } else {
             throw new IllegalArgumentException();
         }

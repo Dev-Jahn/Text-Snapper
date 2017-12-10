@@ -36,6 +36,11 @@ public class PrefUtils
         return pref.getString("ocrSelect", "English").equals("English");
     }
 
+    public static String getLanguage(Context context) {
+        SharedPreferences pref = getDefaultPreferences(context);
+        return pref.getString("ocrSelect", "English");
+    }
+
     public static boolean isFixed(Context context) {
         SharedPreferences pref = getDefaultPreferences(context);
         return pref.getBoolean("floatingButtonLocation", false);

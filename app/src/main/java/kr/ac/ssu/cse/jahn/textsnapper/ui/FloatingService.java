@@ -865,7 +865,7 @@ public class FloatingService extends Service {
                 /**
                  * setSmallIcon은 앱 이미지가 결정되면 그때 반드시 수정해야 함!
                  */
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.mipmap.floating_image)
                 .setContentIntent(intent)
                 .build();
     }

@@ -83,8 +83,6 @@ public class RecentFilesFragment extends Fragment {
                                     ContentValues addRowValue = new ContentValues();
                                     addRowValue.put("filename", curItem.getFileName());
                                     addRowValue.put("file", curItem.getFilePath());
-                                    addRowValue.put("nickname", "null");
-                                    addRowValue.put("flag", 0);
                                     database.insert(addRowValue);
                                     FavoriteFragment.addFavorite(curItem);
                                 }
