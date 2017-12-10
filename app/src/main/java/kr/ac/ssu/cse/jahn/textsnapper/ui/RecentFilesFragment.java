@@ -130,7 +130,7 @@ public class RecentFilesFragment extends Fragment {
                 //startActivity(i);
             }
         };
-        observer = new ScreenshotObserver(Utils.PHOTO_PATH, handler);
+        observer = new ScreenshotObserver(Utils.EDIT_PATH, handler);
         observer.startWatching();
 
         updateAdapterList();

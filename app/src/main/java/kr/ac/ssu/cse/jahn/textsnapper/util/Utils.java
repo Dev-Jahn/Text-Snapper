@@ -31,6 +31,9 @@ import java.util.Date;
  */
 
 public class Utils {
+    /**
+     * PATH
+     */
     public final static String TAG = Utils.class.getSimpleName();
     public static final String APP_PATH = Environment.getExternalStorageDirectory().toString() + "/TextSnapper/";
     public static final String DATA_PATH = APP_PATH + "tessdata/";
