@@ -31,11 +31,14 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
+import kr.ac.ssu.cse.jahn.textsnapper.util.PrefUtils;
+import kr.ac.ssu.cse.jahn.textsnapper.util.TranslateHelper;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
 import static android.content.ContentValues.TAG;
@@ -52,9 +55,10 @@ public class FloatingService extends Service {
     private static boolean isBarActive;
     private static boolean isEng;
     private static boolean canDrawBar;
-    private static boolean cannotMove;
+    private static boolean isFixed;
     private static boolean isHidden;
     private static boolean _cropmode;
+    private static boolean isResultPopup;
 
     protected FileObserver mObserver;
     private Handler mFileHandler;
@@ -71,7 +75,8 @@ public class FloatingService extends Service {
     private static RelativeLayout floatingBar;
     private static CropView mCropView;
     private ImageView removeImage, floatingImage;
-    private ImageView screenshotImage, cropImage, languageImage;
+    private ImageView screenshotImage, cropImage;
+    private static ImageView languageImage;
     private Point windowSize;
 
     // 접근 금지!!
@@ -89,7 +94,6 @@ public class FloatingService extends Service {
          * create virtual display 호출을 위해 onStartCommand 로 이동
          */
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         /**
          * boolean 변수 관리
@@ -98,8 +102,9 @@ public class FloatingService extends Service {
         isBarActive = false;
         isServiceActive = true;
         canDrawBar = true;
-        cannotMove = pref.getBoolean("floatingButtonLocation", false);
+        isFixed = PrefUtils.isFixed(getApplicationContext());
         isHidden = false;
+        isResultPopup = false;
 
         /**
          * Remove Head inflate 부분
@@ -189,12 +194,13 @@ public class FloatingService extends Service {
                  */
                 int currentX = (int) event.getRawX();
                 int currentY = (int) event.getRawY();
+                boolean removeHandlerPosted = false;
 
                 // 이동되는 좌표
                 int afterX;
                 int afterY;
                 // floatingHead를 이동할 수 있으면
-                if (!cannotMove) {
+                if (!isFixed) {
                     switch (event.getAction()) {
                         // 롱클릭
                         case MotionEvent.ACTION_DOWN:
@@ -203,6 +209,7 @@ public class FloatingService extends Service {
                             startTime = System.currentTimeMillis();
                             // 삭제하는 이미지가 얼마나 오랫동안 누르고 있어야 등장할 지 결정
                             longHandler.postDelayed(longRunnable, 300);
+                            removeHandlerPosted = true;
 
                             /**
                              * Floating Button을 움직일 때 기준이 되는 위치
@@ -222,6 +229,10 @@ public class FloatingService extends Service {
                             // 만약 floatingBar가 띄워져 있다면 다시 집어넣는다.
                             if (isBarActive) {
                                 showFloatingBar();
+                                if(!removeHandlerPosted) {
+                                    longHandler.postDelayed(longRunnable, 300);
+                                    removeHandlerPosted = true;
+                                }
                             }
 
                             afterX = marginX + dx;
@@ -314,7 +325,15 @@ public class FloatingService extends Service {
                                 }
                             }
 
-                          //toTopLeft();
+/**
+ * 개발중인 기능 Test Code
+ */
+/**
+    attachTop();
+    showResult();
+ */
+
+
                             afterY = marginY + diffY;
 
                             if (afterY < topMax)
@@ -342,22 +361,9 @@ public class FloatingService extends Service {
                         case MotionEvent.ACTION_DOWN:
                             removeImageWidth = removeImage.getLayoutParams().width;
                             removeImageHeight = removeImage.getLayoutParams().height;
-                            startTime = System.currentTimeMillis();
                             break;
                         case MotionEvent.ACTION_UP:
-                            endTime = System.currentTimeMillis();
-                            if ((endTime - startTime) < 500) {
-                                // click 했을 때 리스트 띄우는 코드
-                                // 크롭모드 도중에 클릭하면 플로팅바 띄우지않고
-                                if (!_cropmode)
-                                    showFloatingBar();
-                                else
-                                {
-                                    mCropView.getCurrentRect();
-                                    mCropView.collapse();
-                                }
-
-                            }
+                            showFloatingBar();
                             break;
                     }
                     return true;
@@ -417,9 +423,9 @@ public class FloatingService extends Service {
     }
 
     /**
-     * 호출시 상단으로 가는데, 수정할 필요가 있음
+     * 호출시 상단으로 Floating Button 이동
      */
-    private void toTopLeft() {
+    private void attachTop() {
         if(isBarActive) {
             showFloatingBar();
         }
@@ -431,83 +437,118 @@ public class FloatingService extends Service {
                 windowManager.updateViewLayout(floatingHead, mParams);
             }
             public void onFinish() {
-                mParams.x = 0;
                 mParams.y = 0;
                 windowManager.updateViewLayout(floatingHead, mParams);
-                showResult();
             }
         }.start();
     }
 
     private void showResult() {
-        /**
-         * 최초 Result PopUp Params 설정
-         */
-        WindowManager.LayoutParams resultParams = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
-                TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                PixelFormat.TRANSLUCENT);
-        resultParams.gravity = Gravity.TOP | Gravity.LEFT;
+        if(!isResultPopup) {
+            /**
+             * 최초 Result PopUp Params 설정
+             */
+            WindowManager.LayoutParams resultParams = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.TYPE_PHONE,
+                    //WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
+                            WindowManager.LayoutParams.FLAG_DIM_BEHIND |
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT);
+            resultParams.dimAmount = 0.5f;
+            resultParams.gravity = Gravity.TOP | Gravity.LEFT;
 
-        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+            LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
 
-        /**
-         * Inflate & FindView
-         */
-        final LinearLayout resultLayout = (LinearLayout)inflater.inflate(R.layout.result_pop_up, null);
+            /**
+             * Inflate & FindView
+             */
+            final LinearLayout resultLayout = (LinearLayout) inflater.inflate(R.layout.result_pop_up, null);
+            LinearLayout cancelArea = (LinearLayout) resultLayout.findViewById(R.id.cancelArea);
+            ImageView save = (ImageView) resultLayout.findViewById(R.id.save);
+            final ImageView translate = (ImageView) resultLayout.findViewById(R.id.translate);
+            ImageView cancel = (ImageView) resultLayout.findViewById(R.id.cancel);
+            final EditText editText = (EditText) resultLayout.findViewById(R.id.editText);
 
-        LinearLayout cancelArea = (LinearLayout) resultLayout.findViewById(R.id.cancelArea);
+            /**
+             * View 위치 설정 및 추가
+             */
+            resultParams.x = 0;
+            resultParams.y = 0;
+            windowManager.addView(resultLayout, resultParams);
+            isResultPopup = true;
 
+            /**
+             * Event Listener 설정
+             */
+            View.OnClickListener cancelEventListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    /**
+                     * Cancel Area 또는 Cancel 버튼 눌렀을 때의 행동
+                     */
+                    windowManager.removeView(resultLayout);
+                    isResultPopup = false;
+                }
+            };
+            cancelArea.setOnClickListener(cancelEventListener);
+            cancel.setOnClickListener(cancelEventListener);
+            save.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    /**
+                     * 저장버튼 눌렀을 때의 행동
+                     */
+                }
+            });
 
-        ImageView save = (ImageView)resultLayout.findViewById(R.id.save);
-        ImageView translate = (ImageView)resultLayout.findViewById(R.id.translate);
-        ImageView cancel = (ImageView)resultLayout.findViewById(R.id.cancel);
-
-
-
-        resultParams.x = 0;
-        resultParams.y = 0;
-        windowManager.addView(resultLayout, resultParams);
-
-
-        /**
-         * Event Listener 설정
-         */
-        View.OnClickListener cancelEventListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                windowManager.removeView(resultLayout);
-            }
-        };
-        cancelArea.setOnClickListener(cancelEventListener);
-        cancel.setOnClickListener(cancelEventListener);
-
-        save.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                /**
-                 * 저장버튼 눌렀을 때의 행동
-                 */
-            }
-        });
-
-        translate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+            translate.setOnClickListener(new View.OnClickListener() {
+                boolean isTranslated = false;
+                String originalText = editText.getText().toString();
                 /**
                  * 번역버튼 눌렀을 때의 행동
                  */
-            }
-        });
+                @Override
+                public void onClick(View v) {
+                    String currentText = editText.getText().toString();
+                    if(!isTranslated) {
+                        boolean isEng = PrefUtils.isEng(getApplicationContext());
+                        final TranslateHelper translateHelper = TranslateHelper.getInstance(isEng, currentText);
+                        originalText = currentText;
+                        Runnable translateRunnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                editText.setText(translateHelper.getResultText());
+                                translate.setImageResource(R.drawable.undo);
+                                isTranslated = true;
+                            }
+                        };
+                        translateHelper.setTranslateRunnable(translateRunnable);
+                        translateHelper.start();
+                    } else {
+                        editText.setText(originalText);
+                        translate.setImageResource(R.drawable.translate);
+                        isTranslated = false;
+                    }
+                }
+            });
+            save.setOnTouchListener(Utils.imageTouchEventListener);
+            translate.setOnTouchListener(Utils.imageTouchEventListener);
+            cancel.setOnTouchListener(Utils.imageTouchEventListener);
+        }
+    }
 
-        save.setOnTouchListener(Utils.imageTouchEventListener);
-        translate.setOnTouchListener(Utils.imageTouchEventListener);
-        cancel.setOnTouchListener(Utils.imageTouchEventListener);
-
+    /**
+     * ocrImageChange로, PrefFragment에서 사용하기 위함
+     */
+    protected static void setLanguageImage(String curLang) {
+        if(curLang.equals("한국어")) {
+            languageImage.setImageResource(R.drawable.kor);
+        } else if(curLang.equals("English")) {
+            languageImage.setImageResource(R.drawable.eng);
+        }
     }
 
     /**
@@ -617,16 +658,15 @@ public class FloatingService extends Service {
                 }
 
                 /**
-                 * Bar Layout Ocr Language 버튼 환경설정과 연동
+                 * Bar Layout을 펼쳤을 때
+                 * Ocr Language 버튼 환경설정과 연동
                  */
-                SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                String ocrLanguage = pref.getString("ocrSelect", "English");
-                if (ocrLanguage.equals("English")) {
+                isEng = PrefUtils.isEng(getApplicationContext());
+
+                if (isEng) {
                     languageImage.setImageResource(R.drawable.eng);
-                    isEng = true;
-                } else if (ocrLanguage.equals("한국어")) {
+                } else {
                     languageImage.setImageResource(R.drawable.kor);
-                    isEng = false;
                 }
 
                 screenshotImage.setOnTouchListener(Utils.imageTouchEventListener);
@@ -635,15 +675,19 @@ public class FloatingService extends Service {
                 cropImage.setOnClickListener(imageClickEventListener);
                 languageImage.setOnTouchListener(Utils.imageTouchEventListener);
 
+                /**
+                 * Language Image를 클릭했을 때
+                 * 환경설정에 적용
+                 * ==> 환경설정을 변경하였을 때
+                 *     Bar Layout과 연동하는 코드는
+                 *     Method화하여 PrefFragment에서 처리함. 참고
+                 */
                 languageImage.setOnClickListener(new ImageView.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                         SharedPreferences.Editor editor = pref.edit();
                         if (isEng) {
-                            /**
-                             * putString 부분 설정 연동 버그를 고쳐야함. 주의할 것.
-                             */
                             editor.putString("ocrSelect", "한국어");
                             isEng = false;
                             languageImage.setImageResource(R.drawable.kor);
@@ -686,7 +730,7 @@ public class FloatingService extends Service {
                 // floatingHead가 왼쪽 벽에 붙어있는 경우 애니메이션
                 if (floatingParams.x < windowSize.x / 2) {
                     canDrawBar = false;
-                    cannotMove = true;
+                    isFixed = true;
                     new CountDownTimer(500, 5) {
                         WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
                         WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
@@ -710,8 +754,7 @@ public class FloatingService extends Service {
                             windowManager.updateViewLayout(floatingBar, mParams);
                             canDrawBar = true;
                             isBarActive = true;
-                            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                            cannotMove = pref.getBoolean("floatingButtonLocation", false);
+                            isFixed = PrefUtils.isFixed(getApplicationContext());
                         }
                     }.start();
                 }
@@ -719,7 +762,7 @@ public class FloatingService extends Service {
                 // floatingHead가 오른쪽 벽에 붙어있는 경우 애니메이션
                 else {
                     canDrawBar = false;
-                    cannotMove = true;
+                    isFixed = true;
                     new CountDownTimer(500, 5) {
                         WindowManager.LayoutParams floatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
                         WindowManager.LayoutParams barParams = (WindowManager.LayoutParams) floatingBar.getLayoutParams();
@@ -744,8 +787,7 @@ public class FloatingService extends Service {
                             windowManager.updateViewLayout(floatingBar, mParams);
                             canDrawBar = true;
                             isBarActive = true;
-                            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                            cannotMove = pref.getBoolean("floatingButtonLocation", false);
+                            isFixed = PrefUtils.isFixed(getApplicationContext());
                         }
                     }.start();
                 }
@@ -962,6 +1004,9 @@ public class FloatingService extends Service {
         if(removeHead != null) {
             windowManager.removeView(removeHead);
         }
+        if(isBarActive) {
+            windowManager.removeView(floatingBar);
+        }
         /**
          * SoundPool 할당 해제
          */
@@ -978,6 +1023,7 @@ public class FloatingService extends Service {
     public static boolean isServiceActive() {
         return isServiceActive;
     }
+    public static boolean isBarActive() { return isBarActive; }
 
     /**
      * 주의!!!!!!
@@ -1013,8 +1059,8 @@ public class FloatingService extends Service {
         }
     }
 
-    protected static void setCannotMove(boolean option) {
-        cannotMove = option;
+    protected static void setIsFixed(boolean option) {
+        isFixed = option;
     }
 
     public static void set_cropmode(boolean _cropmode)

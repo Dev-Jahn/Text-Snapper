@@ -1,8 +1,13 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ui;
 
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.Gravity;
@@ -36,6 +41,7 @@ public class RecentFilesFragment extends Fragment {
     private Context context;
     private ListView mListView;
     private static ArrayList<Item> mList;
+    private ScreenshotObserver observer;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -109,22 +115,36 @@ public class RecentFilesFragment extends Fragment {
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        Log.d("DEBUG8", "ac");
         super.onActivityCreated(savedInstanceState);
         context = getActivity().getApplicationContext();
+        Handler handler = new Handler(Looper.getMainLooper())
+        {
+            @Override
+            public void handleMessage(Message msg)
+            {
+                Intent i = new Intent();
+                i.setComponent(new ComponentName(context.getPackageName(),context.getPackageName()+".TestActivity"));
+                Log.e("DEBUG8", "파일생성 감지: "+msg.getData().getString("path"));
+                updateAdapterList();
+                adapter.notifyDataSetChanged();
+                //startActivity(i);
+            }
+        };
+        observer = new ScreenshotObserver(Utils.PHOTO_PATH, handler);
+        observer.startWatching();
+
         updateAdapterList();
         adapter = new FileAdapter(context, mList);
         mListView.setAdapter(adapter);
     }
 
     public void updateAdapterList() {
-        File curDir = new File(Utils.APP_PATH);
+        File curDir = new File(Utils.EDIT_PATH);
         mList.clear();
         File[] curFiles = curDir.listFiles();
 
         try {
             for (File curFile : curFiles) {
-                Log.d("FileIO", curFile.getAbsolutePath());
                 Date lastModDate = new Date(curFile.lastModified());
                 DateFormat formatter = DateFormat.getDateTimeInstance();
                 String modDate = formatter.format(lastModDate);
@@ -154,8 +174,6 @@ public class RecentFilesFragment extends Fragment {
         updateAdapterList();
         adapter.notifyDataSetChanged();
     }
-
-
     /**
      * 주의! Fragment 상호 교류를 위해 어쩔 수 없이 채택한 코드
      * Fragment 외 호출 금지

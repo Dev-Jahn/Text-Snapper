@@ -37,6 +37,7 @@ import java.util.Date;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.ImageSource;
+import kr.ac.ssu.cse.jahn.textsnapper.util.PrefUtils;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 import ly.img.android.sdk.models.config.CropAspectConfig;
 import ly.img.android.sdk.models.config.Divider;
@@ -82,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     ActionBarDrawerToggle toggle;
     ViewPager viewPager;
+    DrawerLayout drawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
          * toggle.syncState()를 해야 메뉴 버튼이 추가되니 toggle.syncState()까지
          * 코드를 수정하지 말 것!
          **/
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.mainDrawer);
+        drawer = (DrawerLayout) findViewById(R.id.mainDrawer);
         toggle = new ActionBarDrawerToggle(
                 this, drawer, R.string.drawer_open, R.string.drawer_close) {
             @Override
@@ -131,13 +133,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         /**
          * 이하는 Main Activity 버튼에 관한 이벤트 처리
-         **/
-        /**
-        Button button = (Button)findViewById(R.id.widget);
-        button.setOnClickListener(floatingButtonEventListener);
-         */
-
-        /**
+         *
          * 각 버튼에 대해 클릭되었을 때 나타나는 애니메이션 리스너를 달아준다
          */
         ImageView imageCamera = (ImageView)findViewById(R.id.imageCamera);
@@ -314,18 +310,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         @Override
         public void onClick(View v) {
-            SharedPreferences pref = getPreferences(MODE_PRIVATE);
-            boolean canStart = pref.getBoolean("floatingButtonUse", true);
-            if(canStart) {
-                if (Utils.canDrawOverlays(MainActivity.this)) {
-                    if (FloatingService.isServiceActive() == false)
-                        // 시작
-                        startFloatingHead();
-                } else {
-                    requestPermission(REQUEST_PERMISSION_OVERLAY);
-                }
+            if (Utils.canDrawOverlays(MainActivity.this)) {
+                if(PrefUtils.isAvailable(getApplicationContext()))
+                    startFloatingHead();
+                else
+                    Toast.makeText(getApplicationContext(), "FloatingButton 옵션이 비활성화되어 있습니다.", Toast.LENGTH_LONG).show();
             } else {
-                Toast.makeText(getApplicationContext(), "Floating Button Option이 비활성화되어 있습니다.", Toast.LENGTH_LONG).show();
+                requestPermission(REQUEST_PERMISSION_OVERLAY);
             }
         }
     };
@@ -355,6 +346,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onResume();
         SharedPreferences setRefer = PreferenceManager
                 .getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = setRefer.edit();
+        editor.putString("ocrSelect",setRefer.getString("ocrSelect", "English"));
+        editor.putBoolean("floatingButtonUse",setRefer.getBoolean("floatingButtonUse", true));
+        editor.putBoolean("floatingButtonLocation",setRefer.getBoolean("floatingButtonLocation", false));
+        editor.commit();
     }
 
     /**
@@ -404,18 +400,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(intent);
                 break;
             case R.id.navigation_favorite:
+                drawer.closeDrawers();
+                viewPager.setCurrentItem(1);
                 break;
         }
         return true;
     }
 
     private void startFloatingHead() {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean canUseFloating = pref.getBoolean("floatingButtonUse", true);
+        boolean isAvailable = PrefUtils.isAvailable(getApplicationContext());
         /**
          * 서비스가 버튼을 클릭할 때 마다 실행되는 문제 해결
          */
-        if(!FloatingService.isServiceActive() && canUseFloating) {
+        if(!FloatingService.isServiceActive() && isAvailable) {
             Intent intent = new Intent(getApplicationContext(), FloatingService.class);
             intent.putExtra("projection", mProjectionIntent);
             startService(intent);
@@ -423,7 +420,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         /**
          * Option 연동
          */
-        if(!canUseFloating) {
+        if(!isAvailable) {
             Toast.makeText(getApplicationContext(), "FloatingButton 옵션이 비활성화되어 있습니다.", Toast.LENGTH_LONG).show();
         }
     }

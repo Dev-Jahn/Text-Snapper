@@ -32,10 +32,19 @@ public class PrefFragment extends PreferenceFragment {
                     if (key.equals("ocrSelect")) {
                         listPreference.setSummary("인식할 언어를 선택합니다.\n"
                                 + "현재 언어 : " + pref.getString("ocrSelect", "English"));
+                        /**
+                         * 환경설정에서 OCR Language를 변경할 때
+                         * FloatingButton의 FloatingBar가 열려있다면
+                         * LanguageImage를 직접 변경해준다.
+                         */
+                        if(FloatingService.isBarActive()) {
+                            String curLang = pref.getString("ocrSelect", "English");
+                            FloatingService.setLanguageImage(curLang);
+                        }
                     }
                     if(key.equals("floatingButtonUse")) {
-                        boolean canUse = pref.getBoolean("floatingButtonUse", true);
-                        if (canUse == false) {
+                        boolean isAvailable = pref.getBoolean("floatingButtonUse", true);
+                        if (isAvailable == false) {
                             // 옵션 비활성화했는데 현재 서비스가 켜져있다면 종료
                             if (FloatingService.isServiceActive()) {
                                 Intent stopIntent = FloatingService.getCurrentFloatingService();
@@ -44,8 +53,8 @@ public class PrefFragment extends PreferenceFragment {
                         }
                     }
                     if(key.equals("floatingButtonLocation")) {
-                        boolean cannotMove = pref.getBoolean("floatingButtonLocation", true);
-                        FloatingService.setCannotMove(cannotMove);
+                        boolean isFixed = pref.getBoolean("floatingButtonLocation", false);
+                        FloatingService.setIsFixed(isFixed);
                     }
                 }
             };

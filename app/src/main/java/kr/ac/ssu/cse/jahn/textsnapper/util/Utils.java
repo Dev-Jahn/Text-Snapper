@@ -5,27 +5,15 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
-import android.graphics.Point;
 import android.graphics.PorterDuff;
-import android.graphics.RectF;
-import android.hardware.display.DisplayManager;
-import android.media.Image;
-import android.media.ImageReader;
-import android.media.projection.MediaProjection;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -36,7 +24,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 /**
@@ -52,8 +39,6 @@ public class Utils {
 
 
     public final static String EXTERNAL_APP_DIRECTORY = "TextSnapper";
-    private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC;
-
     //오버레이 권한 확인
     public static boolean canDrawOverlays(Context context){
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -114,12 +99,7 @@ public class Utils {
     public static boolean makeAppDir()
     {
 
-        String[] paths = new String[] {
-                APP_PATH,
-                DATA_PATH,
-                CAMERA_PATH,
-                EDIT_PATH
-        };
+        String[] paths = new String[] { DATA_PATH, DATA_PATH + "tessdata/", DATA_PATH + "photo/" };
         for (String path : paths)
         {
             File dir = new File(path);
@@ -142,7 +122,7 @@ public class Utils {
         final boolean allcopied = true;
         for (final String lang:langs)
         {
-            if (!(new File(APP_PATH + "tessdata/" + lang + ".traineddata")).exists())
+            if (!(new File(DATA_PATH + "tessdata/" + lang + ".traineddata")).exists())
             {
                 new Thread(new Runnable()
                 {
@@ -153,7 +133,7 @@ public class Utils {
                         {
                             InputStream in = assetManager.open("tessdata/" + lang + ".traineddata");
                             //GZIPInputStream gin = new GZIPInputStream(in);
-                            OutputStream out = new FileOutputStream(APP_PATH + "tessdata/" + lang + ".traineddata");
+                            OutputStream out = new FileOutputStream(DATA_PATH + "tessdata/" + lang + ".traineddata");
 
                             // Transfer bytes from in to out
                             byte[] buf = new byte[1024];
@@ -180,8 +160,8 @@ public class Utils {
         }
     }
 
-    public static String getAppDir(final Context appContext) {
-        String tessDir = PrefUtils.getAppDir(appContext);
+    public static String getTessDir(final Context appContext) {
+        String tessDir = PrefUtils.getTessDir(appContext);
         if (tessDir == null) {
             return new File(Environment.getExternalStorageDirectory(), EXTERNAL_APP_DIRECTORY).getPath() + "/";
         } else {
@@ -189,7 +169,7 @@ public class Utils {
         }
     }
 
-    public static File saveScreenShot(final Bitmap bitmap) {
+    public static File saveScreenShot(Bitmap bitmap) {
         final String imageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Screenshots/";
         final String timeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
         final String fileName = "Screenshot_"+timeStamp+".png";
@@ -198,26 +178,18 @@ public class Utils {
         if(!dir.exists())
             dir.mkdirs();
         File file = new File(imagePath);
-        new Thread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                FileOutputStream fos;
-                try {
-                    fos = new FileOutputStream(imagePath);
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-                    fos.flush();
-                    fos.close();
-                } catch (FileNotFoundException e) {
-                    Log.e(TAG, e.getMessage(), e);
-                } catch (IOException e) {
-                    Log.e(TAG, e.getMessage(), e);
-                }
-                Log.e(TAG,"Screenshot saved at"+imagePath);
-            }
-        }).start();
-
+        FileOutputStream fos;
+        try {
+            fos = new FileOutputStream(imagePath);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, e.getMessage(), e);
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+        }
+        Log.e(TAG,"Screenshot saved at"+imagePath);
         return file;
     }
 
@@ -234,60 +206,5 @@ public class Utils {
         }
 
         return height;
-    }
-    public static ImageReader createVirtualDisplay(MediaProjection projection, DisplayMetrics metrics, Display display)
-    {
-        Log.e(TAG,"Virtual display created");
-        int density = metrics.densityDpi;
-        // get width and height
-        Point size = new Point();
-        display.getSize(size);
-        int width = size.x;
-        int height = size.y;
-
-        ImageReader reader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2);
-        projection.createVirtualDisplay("screen-mirror", width, height, density, VIRTUAL_DISPLAY_FLAGS, reader.getSurface(), null, null);
-        return reader;
-    }
-
-    public static Bitmap capture(ImageReader reader, Display display)
-    {
-        Log.e(TAG, "Capture");
-        Image image = reader.acquireLatestImage();
-        final Image.Plane[] planes = image.getPlanes();
-        final ByteBuffer buffer = planes[0].getBuffer();
-        Point size = new Point();
-        display.getSize(size);
-        int width = size.x;
-        int height = size.y;
-        int pixelStride = planes[0].getPixelStride();
-        int rowStride = planes[0].getRowStride();
-        int rowPadding = rowStride - pixelStride * width;
-        // create bitmap
-        Bitmap bmp = Bitmap.createBitmap(width+rowPadding/pixelStride, height, Bitmap.Config.ARGB_8888);
-        bmp.copyPixelsFromBuffer(buffer);
-        image.close();
-        return bmp;
-    }
-
-    public static Bitmap cropedCapture(ImageReader reader, Display display, RectF cropRect)
-    {
-        return null;
-    }
-
-    public static String getRealPathFromUri(Context context, Uri contentUri)
-    {
-        String result;
-        Cursor cursor = context.getContentResolver().query(contentUri, null, null, null, null);
-        if (cursor == null)
-            result = contentUri.getPath();
-        else
-        {
-            cursor.moveToFirst();
-            int indx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-            result = cursor.getString(indx);
-            cursor.close();
-        }
-        return result;
     }
 }

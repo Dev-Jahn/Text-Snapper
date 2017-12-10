@@ -2,6 +2,7 @@ package kr.ac.ssu.cse.jahn.textsnapper.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 /**
  * Created by CypressRH on 2017-11-16.
@@ -24,5 +25,24 @@ public class PrefUtils
     {
         SharedPreferences prefs = getPreferences(appContext);
         return prefs.getString(PREFERENCES_TRAINING_DATA_DIR, null);
+    }
+
+    private static SharedPreferences getDefaultPreferences(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context);
+    }
+
+    public static boolean isEng(Context context) {
+        SharedPreferences pref = getDefaultPreferences(context);
+        return pref.getString("ocrSelect", "English").equals("English");
+    }
+
+    public static boolean isFixed(Context context) {
+        SharedPreferences pref = getDefaultPreferences(context);
+        return pref.getBoolean("floatingButtonLocation", false);
+    }
+
+    public static boolean isAvailable(Context context) {
+        SharedPreferences pref = getDefaultPreferences(context);
+        return pref.getBoolean("floatingButtonUse", true);
     }
 }
