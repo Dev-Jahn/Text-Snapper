@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -32,6 +33,7 @@ import kr.ac.ssu.cse.jahn.textsnapper.util.RenameDialog;
 
 public class FavoriteFragment extends Fragment {
 
+    private static FileDatabase database;
     private static FileAdapter adapter;
     private Context context;
     private ListView mListView;
@@ -44,7 +46,6 @@ public class FavoriteFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_favorite, container, false);
         mListView = (ListView)view.findViewById(R.id.listView);
         mList = new ArrayList<Item>();
-
 
         /**
          * 파일을 클릭했을 때에 대한 처리
@@ -82,7 +83,7 @@ public class FavoriteFragment extends Fragment {
                                         ContentValues updateRowValue = new ContentValues();
                                         String nickname = mDialog.getEditTextContent();
                                         updateRowValue.put("filename", nickname);
-                                        database.update(updateRowValue, "'file"+curItem.getFilePath()+"'", null);
+                                        database.update(updateRowValue, "file='"+curItem.getFilePath()+"'", null);
                                         mList.get(mList.indexOf(curItem)).setFileName(nickname);
                                         adapter.notifyDataSetChanged();
                                         mDialog.cancel();
@@ -131,16 +132,15 @@ public class FavoriteFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        context = getActivity().getApplicationContext();
+        context = getActivity();
+        database = FileDatabase.getInstance(context);
         updateAdapterList();
         adapter = new FileAdapter(context, mList);
         mListView.setAdapter(adapter);
     }
 
     public void updateAdapterList() {
-        mList.clear();
         String[] columns = {"filename, file"};
-        FileDatabase database = FileDatabase.getInstance(context);
 
         Cursor cursor = database.query(columns, null, null, null, null, null);
 

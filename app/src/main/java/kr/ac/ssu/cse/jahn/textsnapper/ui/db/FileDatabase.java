@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 /**
  * Created by ArchSlave on 2017-12-07.
@@ -26,13 +27,16 @@ public class FileDatabase {
     public static FileDatabase getInstance(Context context) {
         if(mFileDatabase == null) {
             mFileDatabase = new FileDatabase(context);
+            Log.d("DEBUG9", "DB Manager created");
         }
         return mFileDatabase;
     }
 
     private FileDatabase(Context context) {
         mContext = context;
+
         mDatabase = context.openOrCreateDatabase(DB_NAME, Context.MODE_PRIVATE, null);
+        Log.d("DEBUG9", "DB opened!" + mDatabase.isOpen() + mDatabase.toString());
 
         mDatabase.execSQL("CREATE TABLE IF NOT EXISTS  " + TABLE_FILE
                 + "("+"filename  TEXT, "

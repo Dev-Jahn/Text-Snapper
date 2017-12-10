@@ -52,7 +52,7 @@ public class RecentFilesFragment extends Fragment {
         mList = new ArrayList<Item>();
 
         /**
-         * 파일을 클릭했을 때에 대한 처리
+         * 파일을 클릭했을 때에 대한 처리과정
          */
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -83,8 +83,6 @@ public class RecentFilesFragment extends Fragment {
                                     ContentValues addRowValue = new ContentValues();
                                     addRowValue.put("filename", curItem.getFileName());
                                     addRowValue.put("file", curItem.getFilePath());
-                                    addRowValue.put("nickname", "null");
-                                    addRowValue.put("flag", 0);
                                     database.insert(addRowValue);
                                     FavoriteFragment.addFavorite(curItem);
                                 }
@@ -105,7 +103,7 @@ public class RecentFilesFragment extends Fragment {
 
                 mPopup.show();
 
-                // click 이벤트로 안넘어갈 것이기 때문에 true, 변경 금지
+                // click 이벤트로 안넘어갈 것이기 때문에 true, 변경 금지.
                 return true;
             }
         });

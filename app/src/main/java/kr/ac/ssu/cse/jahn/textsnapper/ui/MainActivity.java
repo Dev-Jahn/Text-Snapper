@@ -490,6 +490,4 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.setCancelable(true);
         builder.show();
     }
-
-
 }
