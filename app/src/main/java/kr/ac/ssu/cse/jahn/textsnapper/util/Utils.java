@@ -32,8 +32,12 @@ import java.util.Date;
 
 public class Utils {
     public final static String TAG = Utils.class.getSimpleName();
-    public static final String DATA_PATH = Environment.getExternalStorageDirectory().toString() + "/TextSnapper/";
-    public static final String PHOTO_PATH = DATA_PATH + "Photo/";
+    public static final String APP_PATH = Environment.getExternalStorageDirectory().toString() + "/TextSnapper/";
+    public static final String DATA_PATH = APP_PATH + "tessdata/";
+    public static final String CAMERA_PATH = APP_PATH + "camera/";
+    public static final String EDIT_PATH = APP_PATH + "edit/";
+
+
     public final static String EXTERNAL_APP_DIRECTORY = "TextSnapper";
     //오버레이 권한 확인
     public static boolean canDrawOverlays(Context context){

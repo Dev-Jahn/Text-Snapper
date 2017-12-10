@@ -139,7 +139,7 @@ public class RecentFilesFragment extends Fragment {
     }
 
     public void updateAdapterList() {
-        File curDir = new File(Utils.PHOTO_PATH);
+        File curDir = new File(Utils.EDIT_PATH);
         mList.clear();
         File[] curFiles = curDir.listFiles();
 

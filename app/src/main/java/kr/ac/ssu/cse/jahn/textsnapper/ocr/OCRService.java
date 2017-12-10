@@ -151,10 +151,10 @@ public class OCRService extends Service
             else
             {
                 Log.e("TAG", "To CropActivity");
-                Intent actionIntent = new Intent(this, CropActivity.class);
+                /*Intent actionIntent = new Intent(this, CropActivity.class);
                 actionIntent.putExtra(EXTRA_NATIVE_PIX, nativePix);
                 //결과 확인 불가하므로 액티비티 에서 종료시 브로드캐스트 송신
-                startActivity(actionIntent);
+                startActivity(actionIntent);*/
             }
         }
         else

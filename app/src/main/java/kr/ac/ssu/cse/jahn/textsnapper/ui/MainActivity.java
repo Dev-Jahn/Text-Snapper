@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.hardware.display.DisplayManager;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
@@ -16,11 +15,9 @@ import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
-import android.support.v4.content.FileProvider;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -42,8 +39,19 @@ import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.ImageSource;
 import kr.ac.ssu.cse.jahn.textsnapper.util.PrefUtils;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
+import ly.img.android.sdk.models.config.CropAspectConfig;
+import ly.img.android.sdk.models.config.Divider;
+import ly.img.android.sdk.models.state.CameraSettings;
+import ly.img.android.sdk.models.state.ColorAdjustmentSettings;
+import ly.img.android.sdk.models.state.EditorLoadSettings;
+import ly.img.android.sdk.models.state.EditorSaveSettings;
+import ly.img.android.sdk.models.state.manager.SettingsList;
+import ly.img.android.sdk.tools.ColorAdjustmentTool;
+import ly.img.android.sdk.tools.TransformEditorTool;
+import ly.img.android.ui.activities.CameraPreviewBuilder;
+import ly.img.android.ui.activities.PhotoEditorBuilder;
 
-import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.DATA_PATH;
+import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.APP_PATH;
 import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.copyTessdata;
 
 
@@ -53,14 +61,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public static final int REQUEST_CAMERA = 100;
     public static final int REQUEST_GALLERY = 101;
-    public static final int REQUEST_CROP = 102;
+    public static final int REQUEST_EDIT = 102;
     public static final int REQUEST_MEDIA_PROJECTION = 103;
     public static final int REQUEST_PERMISSION_OVERLAY = 104;
 
     // Floating Action Button Overlay를 위한 요청 코드
     private static final String TAG = "Mainactivity";
     private static final String[] LANGS = {"eng", "kor"};
-    protected String mPhotoDirPath = DATA_PATH + "photo/";
+    protected String mPhotoDirPath = APP_PATH + "photo/";
     protected String mPhotoPath;
 
     protected MediaProjectionManager mProjectionManager;
@@ -84,7 +92,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //상단바 높이 저장
         statusbarHeight = Utils.getStatusBarHeight(getResources());
-        Log.e(TAG,String.valueOf(statusbarHeight));
 
         //권한요청
         Utils.request(this, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
@@ -155,35 +162,122 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             switch (view.getId())
             {
             case R.id.imageGallery:
-                fromGallery();
+                startGallery();
                 break;
             case R.id.imageCamera:
-                Log.e(TAG,"Camera Button");
-                //fromCamera();
+                startCamera();
                 break;
             }
         }
     }
-    private void fromGallery()
+
+    public void startGallery()
     {
-        Log.e("TAG", "fromGallery()");
         Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, REQUEST_GALLERY);
     }
+    public void startCamera() {
+        Log.e("TAG", "Start Camera");
+        SettingsList settingsList = new SettingsList();
+        settingsList
+                // Set custom camera export settings
+                .getSettingsModel(CameraSettings.class)
+                .setExportDir(Utils.CAMERA_PATH)
+                .setExportPrefix("camera_")
+                // Set custom editor export settings
+                .getSettingsModel(EditorSaveSettings.class)
+                .setExportDir(Utils.EDIT_PATH)
+                .setExportPrefix("result_")
+                .setSavePolicy(
+                        EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT
+                );
+        customizeConfig(settingsList);
 
-    private void fromCamera()
-    {
-        File photoFile = createImageFile();
-        //파일프로바이더 사용
-        Uri outputFileUri = FileProvider.getUriForFile(getApplicationContext(), getPackageName()+".provider",photoFile);
+        new CameraPreviewBuilder(this)
+                .setSettingsList(settingsList)
+                .startActivityForResult(this, REQUEST_CAMERA);
+    }
+    public void startEditor(String path) {
+        SettingsList settingsList = new SettingsList();
+        settingsList
+                .getSettingsModel(EditorLoadSettings.class)
+                .setImageSourcePath(path, true) // Load with delete protection true!
+                .getSettingsModel(EditorSaveSettings.class)
+                .setExportDir(Utils.EDIT_PATH)
+                .setExportPrefix("result_")
+                .setSavePolicy(
+                        EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT
+                );
 
-        final Intent takePic = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        takePic.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
-        takePic.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        if (takePic.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePic, REQUEST_CAMERA);
+        customizeConfig(settingsList);
+        new PhotoEditorBuilder(this)
+                .setSettingsList(settingsList)
+                .startActivityForResult(this, REQUEST_EDIT);
+    }
+
+    public void customizeConfig(SettingsList settingsList) {
+        settingsList.getConfig().setFilters();
+
+        TransformEditorTool transform = new TransformEditorTool(R.string.imgly_tool_name_crop, R.drawable.imgly_icon_tool_transform);
+        ColorAdjustmentTool adjustTool = new ColorAdjustmentTool(R.string.imgly_tool_name_adjust, R.drawable.imgly_icon_tool_adjust);
+        ColorAdjustmentSettings adjust = settingsList.getSettingsModel(ColorAdjustmentSettings.class);
+        adjust.setBrightness(0.3f);
+        adjust.setContrast(2.0f);
+        adjust.setSaturation(-1.0f);
+        adjust.setClarity(1.0f);
+        settingsList.getConfig().setTools(
+                transform,
+                new Divider(),
+                new Divider(),
+                new Divider(),
+                new Divider(),
+                adjustTool
+        ).setAspects(CropAspectConfig.FREE_CROP);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        Bitmap imageBitmap;
+        Uri photoUri;
+        Log.i(TAG, "resultCode: " + resultCode);
+
+        if (resultCode == RESULT_OK)
+        {
+            photoUri = data.getData();
+            switch (requestCode)
+            {
+            case REQUEST_PERMISSION_OVERLAY:
+                if (!Utils.canDrawOverlays(this)) {
+                    needPermissionDialog(requestCode);
+                } else {
+                    startFloatingHead();
+                }
+                break;
+            case REQUEST_MEDIA_PROJECTION:
+                mProjectionIntent = data;
+                data.putExtra("resultcode", resultCode);
+                break;
+            case REQUEST_GALLERY:
+                startEditor(Utils.getRealPathFromUri(this, photoUri));
+                break;
+            case REQUEST_CAMERA:
+            case REQUEST_EDIT:
+                Log.e("TAG","onActivityResult(): 카메라 & 에디트");
+                Intent result = new Intent(this, TestActivity.class);
+                result.setDataAndType(photoUri,"image/*");
+                result.putExtra("imagesource", ImageSource.CROP);
+                startActivity(result);
+                break;
+            }
+        }
+        else
+        {
+            Log.v(TAG, "User cancelled");
         }
     }
+
     private File createImageFile()
     {
         // Create an image file name
@@ -372,55 +466,5 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.show();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
 
-        Bitmap imageBitmap;
-        Uri photoUri;
-        Log.i(TAG, "resultCode: " + resultCode);
-
-        if (resultCode == RESULT_OK)
-        {
-            photoUri = data.getData();
-            switch (requestCode)
-            {
-            case REQUEST_PERMISSION_OVERLAY:
-                if (!Utils.canDrawOverlays(this)) {
-                    needPermissionDialog(requestCode);
-                } else {
-                    startFloatingHead();
-                }
-                break;
-            case REQUEST_MEDIA_PROJECTION:
-                mProjectionIntent = data;
-                data.putExtra("resultcode", resultCode);
-                break;
-            case REQUEST_GALLERY:
-                Intent editIntent = new Intent(Intent.ACTION_EDIT);
-                editIntent.setDataAndType(photoUri, "image/*");
-                editIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivityForResult(Intent.createChooser(editIntent, null),REQUEST_CROP);
-
-                //mImageView.setImageBitmap(imageBitmap);
-                break;
-            case REQUEST_CAMERA:
-                imageBitmap = BitmapFactory.decodeFile(mPhotoPath);
-                //onPhotoTaken();
-                break;
-            case REQUEST_CROP:
-                Log.e("TAG","onActivityResult():REQUEST_CROP");
-                Intent result = new Intent(this, TestActivity.class);
-                result.setDataAndType(photoUri,"image/*");
-                result.putExtra("imagesource", ImageSource.CROP);
-                startActivity(result);
-
-                break;
-            }
-        }
-        else
-        {
-            Log.v(TAG, "User cancelled");
-        }
-    }
 }

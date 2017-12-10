@@ -19,6 +19,9 @@ import android.view.WindowManager;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 
+import static android.view.KeyEvent.KEYCODE_APP_SWITCH;
+import static android.view.KeyEvent.KEYCODE_BACK;
+import static android.view.KeyEvent.KEYCODE_HOME;
 import static android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
 import static android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
 
@@ -78,6 +81,8 @@ public class CropView extends View
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                 PixelFormat.RGBA_8888);
         dotParams.gravity = Gravity.TOP | Gravity.LEFT;
+
+        requestFocus();
     }
 
     /**
@@ -89,12 +94,18 @@ public class CropView extends View
         this.wm = wm;
         for (int i=0;i<8;i++)
         {
-            mCropDots[i].setVisibility(VISIBLE);
             wm.addView(mCropDots[i],dotParams);
         }
     }
 
-
+    /**
+     *  현재 CropRect를 리턴
+     *  해당 Rect 위치의 화면을 ImageProjection으로 부터 잘라서 OCR하는데 사용
+     */
+    public RectF getCurrentRect()
+    {
+        return mCropRect;
+    }
 
     @Override
     protected void onDraw(Canvas canvas)
@@ -121,8 +132,6 @@ public class CropView extends View
                     dotParams.y = (int)curRect.vertices[i].y-DOT_SIZE/2;
                 else if (i>=5&&i<=7)
                     dotParams.y = (int)curRect.vertices[i].y-DOT_SIZE/2;
-                mCropDots[i].setVisibility(VISIBLE);
-                Log.e(TAG,"drawingdot");
                 wm.updateViewLayout(mCropDots[i], dotParams);
             }
 
@@ -167,14 +176,15 @@ public class CropView extends View
         case MotionEvent.ACTION_DOWN:
             if (_drawmode)
             {
-                for (int i=0;i<8;i++)
-                    mCropDots[i].setVisibility(VISIBLE);
+
                 mInitPoint.set(event.getX(),event.getY());
             }
             break;
         case MotionEvent.ACTION_MOVE:
             if (_drawmode)
             {
+                for (int i=0;i<8;i++)
+                    mCropDots[i].setVisibility(VISIBLE);
                 mCurrPoint.set(event.getX(),event.getY());
                 mCropRect.set(mInitPoint,mCurrPoint);
                 invalidate();
@@ -202,21 +212,17 @@ public class CropView extends View
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event)
     {
-        if (keyCode==KeyEvent.KEYCODE_BACK)
+        switch (keyCode)
         {
-            if (_editmode)
-            {
-                _editmode = false;
-                invalidate();
-            }
-            else if (!_drawmode&&!_editmode)
-            {
-                setVisibility(GONE);
-                invalidate();
-            }
+        case KEYCODE_HOME:
+        case KEYCODE_APP_SWITCH:
+        case KEYCODE_BACK:
+            collapse();
         }
         return super.onKeyDown(keyCode, event);
     }
+
+
 
     /**
      * 이미지뷰 인덱싱을 위해 재정의
@@ -266,5 +272,15 @@ public class CropView extends View
             }
             return false;
         }
+    }
+
+    public void collapse()
+    {
+        if (mCropDots[0]!=null)
+            for (int i=0;i<8;i++)
+                mCropDots[i].setVisibility(GONE);
+        setVisibility(GONE);
+        invalidate();
+        FloatingService.set_cropmode(false);
     }
 }
