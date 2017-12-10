@@ -36,7 +36,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
+import kr.ac.ssu.cse.jahn.textsnapper.ocr.ImageSource;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
+import ly.img.android.PESDK;
 import ly.img.android.sdk.models.config.CropAspectConfig;
 import ly.img.android.sdk.models.config.Divider;
 import ly.img.android.sdk.models.state.CameraSettings;
@@ -268,10 +270,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case REQUEST_CAMERA:
             case REQUEST_EDIT:
                 Log.e("TAG","onActivityResult(): 카메라 & 에디트");
-                /*Intent result = new Intent(this, TestActivity.class);
+                Intent result = new Intent(this, TestActivity.class);
                 result.setDataAndType(photoUri,"image/*");
                 result.putExtra("imagesource", ImageSource.CROP);
-                startActivity(result);*/
+                startActivity(result);
                 break;
             }
         }
