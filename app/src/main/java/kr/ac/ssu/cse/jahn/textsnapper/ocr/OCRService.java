@@ -289,7 +289,17 @@ public class OCRService extends Service
                 }
                 break;
             case OCRProcessor.MESSAGE_END:
-                Toast.makeText(OCRService.this, "MSG_END", Toast.LENGTH_SHORT).show();
+                if (mCallback!=null)
+                {
+                    try
+                    {
+                        mCallback.sendResult(msg);
+                    } catch (RemoteException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+                Log.e(TAG, "OCR completed");
                 break;
             case OCRProcessor.MESSAGE_ERROR:
                 Toast.makeText(getApplicationContext(), getText(msg.arg1), Toast.LENGTH_LONG).show();

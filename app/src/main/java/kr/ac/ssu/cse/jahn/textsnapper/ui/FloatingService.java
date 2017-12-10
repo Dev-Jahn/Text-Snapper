@@ -17,6 +17,7 @@ import android.media.ImageReader;
 import android.media.SoundPool;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -40,9 +41,11 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.googlecode.leptonica.android.Pix;
+import com.googlecode.leptonica.android.WriteFile;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
@@ -51,6 +54,7 @@ import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.IOCRService;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.IOCRServiceCallback;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.OCRProcessor;
+import kr.ac.ssu.cse.jahn.textsnapper.ocr.OCRService;
 import kr.ac.ssu.cse.jahn.textsnapper.util.PrefUtils;
 import kr.ac.ssu.cse.jahn.textsnapper.util.TranslateHelper;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
@@ -97,6 +101,8 @@ public class FloatingService extends Service {
     protected IOCRService mBinder = null;
     protected Pix mFinalPix;
     protected String mOCRedString;
+    protected Uri uriForOCR;
+    protected ImageView mResultImage;
     private boolean _binded = false;
 
 
@@ -141,14 +147,16 @@ public class FloatingService extends Service {
                 if (nativePix != 0)
                 {
                     mFinalPix = new Pix(nativePix);
-                    //mImageView.setImageBitmap(WriteFile.writeBitmap(mFinalPix));
+                    mResultImage.setImageBitmap(WriteFile.writeBitmap(mFinalPix));
                 }
                 break;
-
             case OCRProcessor.MESSAGE_UTF8_TEXT:
                 mOCRedString = (String) msg.obj;
                 break;
-
+            case OCRProcessor.MESSAGE_END:
+                attachTop();
+                showResult();
+                break;
             }
         }
 
@@ -161,7 +169,8 @@ public class FloatingService extends Service {
 
     protected void startOCR()
     {
-        Intent source = new Intent();//getIntent();
+        Intent source = new Intent();
+        source.setData(uriForOCR);
         source.putExtra("lang", PrefUtils.getLanguage(this));
         //main action
         try
@@ -183,6 +192,11 @@ public class FloatingService extends Service {
     }
 
     private void handleStart() {
+        /**
+         * OCR서비스 바인딩
+         */
+        bindService(new Intent(this, OCRService.class),mConnection,BIND_AUTO_CREATE);
+
         /**
          * WindowManager로 Floating Head 관리
          * create virtual display 호출을 위해 onStartCommand 로 이동
@@ -1012,6 +1026,7 @@ public class FloatingService extends Service {
         Log.e(TAG,"FileObserver started watching");
 
         /**
+         * 스크린샷편집후 또는 크롭완료를 감지
          * 임시구현
          * 기존 옵저버와 병합필요
          */
@@ -1020,7 +1035,10 @@ public class FloatingService extends Service {
             @Override
             public void handleMessage(Message msg)
             {
-                super.handleMessage(msg);
+                if (!MainActivity.isForeground)
+                {
+                    uriForOCR = Uri.fromFile(new File(msg.getData().getString("path")));
+                }
             }
         };
         ScreenshotObserver mEditObserver = new ScreenshotObserver(Utils.EDIT_PATH,mTempHandler);
@@ -1154,6 +1172,9 @@ public class FloatingService extends Service {
         // 파일옵저버 정지
         mObserver.stopWatching();
         mEditObserver.stopWatching();
+        //OCR서비스 언바인드
+        unbindService(mConnection);
+
     }
 
     public static boolean isServiceActive() {

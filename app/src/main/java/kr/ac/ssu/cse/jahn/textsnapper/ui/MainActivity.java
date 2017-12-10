@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected int mWidth;
     protected int mHeight;
     private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC;
+    protected static boolean isForeground = false;
 
     ActionBarDrawerToggle toggle;
     ViewPager viewPager;
@@ -91,10 +92,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         //상단바 높이 저장
         statusbarHeight = Utils.getStatusBarHeight(getResources());
-
         //권한요청
         Utils.request(this, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
         mProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
@@ -377,6 +376,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         editor.putBoolean("floatingButtonUse",setRefer.getBoolean("floatingButtonUse", true));
         editor.putBoolean("floatingButtonLocation",setRefer.getBoolean("floatingButtonLocation", false));
         editor.commit();
+        isForeground = true;
+    }
+
+    @Override
+    protected void onPause()
+    {
+        isForeground = false;
+        super.onPause();
     }
 
     /**
@@ -491,4 +498,5 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.setCancelable(true);
         builder.show();
     }
+
 }
