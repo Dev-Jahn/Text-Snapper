@@ -35,6 +35,13 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.StringReader;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.util.PrefUtils;
@@ -315,7 +322,7 @@ public class FloatingService extends Service {
 
                             int diffX = currentX - initX;
                             int diffY = currentY - initY;
-
+/*
                             // X, Y 이동값이 적은 경우는 FloatingBar를 띄우는 액션으로 본다
                             if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5) {
                                 endTime = System.currentTimeMillis();
@@ -328,10 +335,10 @@ public class FloatingService extends Service {
 /**
  * 개발중인 기능 Test Code
  */
-/**
+
     attachTop();
     showResult();
- */
+
 
 
                             afterY = marginY + diffY;
@@ -501,6 +508,31 @@ public class FloatingService extends Service {
                     /**
                      * 저장버튼 눌렀을 때의 행동
                      */
+                    String text = editText.getText().toString();
+
+                    String path = Utils.DATA_PATH;
+                    String fileName = "";
+
+                    BufferedReader br = null;
+                    BufferedWriter bw = null;
+                    try {
+                        br = new BufferedReader(new StringReader(text));
+                        bw = new BufferedWriter(new FileWriter(path + fileName));
+                        String buf;
+
+                        while( (buf = br.readLine()) != null ) {
+                            bw.write(buf);
+                            bw.newLine();
+                        }
+                        bw.flush();
+                        Toast.makeText(getApplicationContext(), "저장 성공!", Toast.LENGTH_LONG).show();
+                    }catch(IOException e) {
+                        Toast.makeText(getApplicationContext(), "저장 실패", Toast.LENGTH_LONG).show();
+                        Log.d("DEBUG9", e.toString());
+                    }finally{
+                        Utils.close(br);
+                        Utils.close(bw);
+                    }
                 }
             });
 

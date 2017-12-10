@@ -30,6 +30,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -63,6 +64,15 @@ public class Utils {
             return true;
         } else {
             return Settings.canDrawOverlays(context);
+        }
+    }
+
+    public static void close(Closeable c) {
+        if(c != null) return ;
+        try{
+            c.close();
+        }catch(Exception e){
+            // do nothing
         }
     }
 

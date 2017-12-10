@@ -81,8 +81,18 @@ public class FileAdapter extends BaseAdapter {
 
         File curFile = new File(curItem.getFilePath());
         if(curFile.exists()) {
-            Bitmap fileBitmapImage = BitmapFactory.decodeFile(curFile.getAbsolutePath());
-            viewHolder.fileImageView.setImageBitmap(fileBitmapImage);
+            Bitmap fileBitmapImage;
+            if(curFile.length() > 1024 * 1024) {
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inSampleSize = 8;
+                fileBitmapImage = BitmapFactory.decodeFile(curFile.getAbsolutePath(), options);
+            } else {
+                fileBitmapImage = BitmapFactory.decodeFile(curFile.getAbsolutePath());
+            }
+            int width = viewHolder.fileImageView.getLayoutParams().width;
+            int height = viewHolder.fileImageView.getLayoutParams().height;
+            Bitmap resizeImage = Bitmap.createScaledBitmap(fileBitmapImage, width, height, true);
+            viewHolder.fileImageView.setImageBitmap(resizeImage);
             viewHolder.fileNameTextView.setText(curItem.getFileName());
             viewHolder.fileSizeTextView.setText(curItem.getFileSize());
             viewHolder.fileDateTextView.setText(curItem.getFileDate());
