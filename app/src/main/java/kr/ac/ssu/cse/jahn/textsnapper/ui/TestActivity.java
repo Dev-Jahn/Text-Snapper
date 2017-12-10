@@ -104,7 +104,7 @@ public class TestActivity extends AppCompatActivity
         Intent intent = new Intent(this, OCRService.class);
         //테스트코드
         Log.e(TAG, "Activity started");
-        Uri screenshotUri = getIntent().getParcelableExtra("screenshot");
+        Uri screenshotUri = getIntent().getData();//getParcelableExtra("screenshot");
         if (screenshotUri!=null)
         {
             Picasso.with(this).load(screenshotUri).into(mImageView);
@@ -113,7 +113,7 @@ public class TestActivity extends AppCompatActivity
         else
             Log.e(TAG,"image not loaded");
 
-        //bindService(intent, mConnection, BIND_AUTO_CREATE);
+        bindService(intent, mConnection, BIND_AUTO_CREATE);
     }
 
     protected void start()
