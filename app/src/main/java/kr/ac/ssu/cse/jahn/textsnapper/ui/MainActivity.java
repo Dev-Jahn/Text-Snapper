@@ -38,7 +38,6 @@ import java.util.Date;
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.ImageSource;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
-import ly.img.android.PESDK;
 import ly.img.android.sdk.models.config.CropAspectConfig;
 import ly.img.android.sdk.models.config.Divider;
 import ly.img.android.sdk.models.state.CameraSettings;
