@@ -564,7 +564,7 @@ public class FloatingService extends Service {
             ImageView save = (ImageView) resultLayout.findViewById(R.id.save);
             final ImageView translate = (ImageView) resultLayout.findViewById(R.id.translate);
             ImageView cancel = (ImageView) resultLayout.findViewById(R.id.cancel);
-            final EditText editText = (EditText) resultLayout.findViewById(R.id.editText);
+            final EditText editText = (EditText) resultLayout.findViewById(R.id.mText);
 
             /**
              * View 위치 설정 및 추가

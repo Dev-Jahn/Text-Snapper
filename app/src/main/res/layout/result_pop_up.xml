@@ -45,7 +45,7 @@
             android:background="@drawable/weak_outline_bottom"
             android:textStyle="bold"/>
         <EditText
-            android:id="@+id/editText"
+            android:id="@+id/mText"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:textColor="@color/primary"

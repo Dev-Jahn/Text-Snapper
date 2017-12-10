@@ -23,7 +23,7 @@ public class RenameDialog extends Dialog {
         setContentView(R.layout.dialog_rename);
         okButton = (TextView)findViewById(R.id.okButton);
         cancelButton = (TextView)findViewById(R.id.cancelButton);
-        editText = (EditText)findViewById(R.id.editText);
+        editText = (EditText)findViewById(R.id.mText);
     }
 
     public void setOkClickListener(View.OnClickListener _okListener) {
