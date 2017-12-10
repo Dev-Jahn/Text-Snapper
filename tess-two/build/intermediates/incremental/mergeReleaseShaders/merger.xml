@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merger version="3"><dataSet config="main"><source path="C:\Users\CypressRH\Desktop\Coding\Android\TextSnapper\tess-two\src\main\shaders"/></dataSet><dataSet config="release"><source path="C:\Users\CypressRH\Desktop\Coding\Android\TextSnapper\tess-two\src\release\shaders"/></dataSet></merger>
+<merger version="3"><dataSet config="main"><source path="C:\Users\CypressRH\Desktop\Coding\AndroidProject\Text-Snapper\tess-two\src\main\shaders"/></dataSet><dataSet config="release"><source path="C:\Users\CypressRH\Desktop\Coding\AndroidProject\Text-Snapper\tess-two\src\release\shaders"/></dataSet></merger>

@@ -34,10 +34,11 @@ import java.io.IOException;
  * @author alanv@google.com (Alan Viverette)
  */
 public class ReadFile {
-    static {
+    static{
         System.loadLibrary("jpgt");
         System.loadLibrary("pngt");
         System.loadLibrary("lept");
+        System.loadLibrary("tess");
     }
 
     private static final String LOG_TAG = ReadFile.class.getSimpleName();

@@ -24,7 +24,6 @@ package com.googlecode.leptonica.android;
 @SuppressWarnings("WeakerAccess")
 public class Skew {
     static {
-        System.loadLibrary("jpgt");
         System.loadLibrary("pngt");
         System.loadLibrary("lept");
     }
