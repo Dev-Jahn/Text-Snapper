@@ -49,6 +49,7 @@ import ly.img.android.sdk.models.state.manager.SettingsList;
 import ly.img.android.sdk.tools.ColorAdjustmentTool;
 import ly.img.android.sdk.tools.TransformEditorTool;
 import ly.img.android.ui.activities.CameraPreviewBuilder;
+import ly.img.android.ui.activities.ImgLyIntent;
 import ly.img.android.ui.activities.PhotoEditorBuilder;
 
 import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.APP_PATH;
@@ -264,7 +265,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case REQUEST_CAMERA:
             case REQUEST_EDIT:
-                Log.e("TAG","onActivityResult(): 카메라 & 에디트");
+                String resultPath =
+                        data.getStringExtra(ImgLyIntent.RESULT_IMAGE_PATH);
+                String sourcePath =
+                        data.getStringExtra(ImgLyIntent.SOURCE_IMAGE_PATH);
+
+                if (resultPath != null) {
+                    // Scan result file
+                    File file =  new File(resultPath);
+                    Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    photoUri = Uri.fromFile(file);
+                    scanIntent.setData(photoUri);
+                    sendBroadcast(scanIntent);
+                }
+
+                if (sourcePath != null) {
+                    // Scan camera file
+                    File file =  new File(sourcePath);
+                    Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    photoUri = Uri.fromFile(file);
+                    scanIntent.setData(photoUri);
+                    sendBroadcast(scanIntent);
+                }
+                Log.e("TAG","onActivityResult(): 카메라 & 에디트"+photoUri);
                 Intent result = new Intent(this, TestActivity.class);
                 result.setDataAndType(photoUri,"image/*");
                 result.putExtra("imagesource", ImageSource.CROP);
