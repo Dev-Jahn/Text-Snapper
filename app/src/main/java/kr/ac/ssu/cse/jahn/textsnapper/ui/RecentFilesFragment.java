@@ -105,7 +105,7 @@ public class RecentFilesFragment extends Fragment {
 
                 mPopup.show();
 
-                // click 이벤트로 안넘어갈 것이기 때문에 true, 변경 금지
+                // click 이벤트로 안넘어갈 것이기 때문에 true, 변경 금지.
                 return true;
             }
         });
