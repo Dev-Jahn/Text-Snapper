@@ -52,7 +52,7 @@ public class RecentFilesFragment extends Fragment {
         mList = new ArrayList<Item>();
 
         /**
-         * 파일을 클릭했을 때에 대한 처리
+         * 파일을 클릭했을 때에 대한 처리과정
          */
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
