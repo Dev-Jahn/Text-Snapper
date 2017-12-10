@@ -48,7 +48,7 @@ public class ImageLoadAsyncTask extends AsyncTask<Void, Void, ImageLoadAsyncTask
     final static String EXTRA_STATUS = "status";
     final static String EXTRA_SKIP_CROP = "skip_crop";
     final static String ACTION_IMAGE_LOADED = ImageLoadAsyncTask.class.getName() + ".image.loaded";
-    final static String ACTION_IMAGE_LOADING_START = ImageLoadAsyncTask.class.getName() + ".image.loading.start";
+    final static String ACTION_IMAGE_LOADING_START = ImageLoadAsyncTask.class.getName() + ".image.loading.startOCR";
     private static final int MIN_PIXEL_COUNT = 3 * 1024 * 1024;
     private final boolean skipCrop;
     private final Context mContext;

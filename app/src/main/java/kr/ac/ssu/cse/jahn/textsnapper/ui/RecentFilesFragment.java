@@ -121,11 +121,10 @@ public class RecentFilesFragment extends Fragment {
             public void handleMessage(Message msg)
             {
                 Intent i = new Intent();
-                i.setComponent(new ComponentName(context.getPackageName(),context.getPackageName()+".TestActivity"));
+                i.setComponent(new ComponentName(context.getPackageName(),context.getPackageName()+".ResultActivity"));
                 Log.e("DEBUG8", "파일생성 감지: "+msg.getData().getString("path"));
                 updateAdapterList();
                 adapter.notifyDataSetChanged();
-                //startActivity(i);
             }
         };
         observer = new ScreenshotObserver(Utils.EDIT_PATH, handler);

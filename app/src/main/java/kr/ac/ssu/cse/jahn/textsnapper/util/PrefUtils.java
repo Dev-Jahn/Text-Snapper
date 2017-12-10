@@ -37,8 +37,10 @@ public class PrefUtils
     }
 
     public static String getLanguage(Context context) {
-        SharedPreferences pref = getDefaultPreferences(context);
-        return pref.getString("ocrSelect", "English");
+        if (isEng(context))
+            return "eng";
+        else
+            return "kor";
     }
 
     public static boolean isFixed(Context context) {

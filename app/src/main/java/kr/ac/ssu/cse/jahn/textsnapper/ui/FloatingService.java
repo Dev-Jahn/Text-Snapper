@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
@@ -24,6 +25,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -37,6 +39,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.googlecode.leptonica.android.Pix;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -44,6 +48,9 @@ import java.io.IOException;
 import java.io.StringReader;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
+import kr.ac.ssu.cse.jahn.textsnapper.ocr.IOCRService;
+import kr.ac.ssu.cse.jahn.textsnapper.ocr.IOCRServiceCallback;
+import kr.ac.ssu.cse.jahn.textsnapper.ocr.OCRProcessor;
 import kr.ac.ssu.cse.jahn.textsnapper.util.PrefUtils;
 import kr.ac.ssu.cse.jahn.textsnapper.util.TranslateHelper;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
@@ -68,6 +75,7 @@ public class FloatingService extends Service {
     private static boolean isResultPopup;
 
     protected FileObserver mObserver;
+    protected FileObserver mEditObserver;
     private Handler mFileHandler;
     protected MediaProjectionManager mProjectionManager;
     protected MediaProjection mProjection;
@@ -86,8 +94,87 @@ public class FloatingService extends Service {
     private static ImageView languageImage;
     private Point windowSize;
 
+    protected IOCRService mBinder = null;
+    protected Pix mFinalPix;
+    protected String mOCRedString;
+    private boolean _binded = false;
+
+
     // 접근 금지!!
     private static FloatingService thisService;
+
+    private ServiceConnection mConnection = new ServiceConnection()
+    {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service)
+        {
+            Log.e(TAG, "Service Connected");
+            mBinder = IOCRService.Stub.asInterface(service);
+            _binded = true;
+            startOCR();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name)
+        {
+            Log.e(TAG, "Service disconnected");
+            mBinder = null;
+            _binded = false;
+        }
+    };
+
+    IOCRServiceCallback mCallback = new IOCRServiceCallback()
+    {
+        @Override
+        public void basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat, double aDouble, String aString) throws RemoteException
+        {
+
+        }
+
+        @Override
+        public void sendResult(Message msg) throws RemoteException
+        {
+            switch (msg.what)
+            {
+            case OCRProcessor.MESSAGE_FINAL_IMAGE:
+                long nativePix = (long) msg.obj;
+                if (nativePix != 0)
+                {
+                    mFinalPix = new Pix(nativePix);
+                    //mImageView.setImageBitmap(WriteFile.writeBitmap(mFinalPix));
+                }
+                break;
+
+            case OCRProcessor.MESSAGE_UTF8_TEXT:
+                mOCRedString = (String) msg.obj;
+                break;
+
+            }
+        }
+
+        @Override
+        public IBinder asBinder()
+        {
+            return null;
+        }
+    };
+
+    protected void startOCR()
+    {
+        Intent source = new Intent();//getIntent();
+        source.putExtra("lang", PrefUtils.getLanguage(this));
+        //main action
+        try
+        {
+            mBinder.setCallback(mCallback);
+            mBinder.startOCR(source);
+        }
+        catch (RemoteException e)
+        {
+            Log.e(TAG, "RemoteException");
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void onCreate() {
@@ -913,7 +1000,7 @@ public class FloatingService extends Service {
             public void handleMessage(Message msg)
             {
                 Intent i = new Intent();
-                i.setComponent(new ComponentName(getPackageName(),getPackageName()+".TestActivity"));
+
                 Log.e(TAG, "파일생성 감지: "+msg.getData().getString("path"));
                 //startActivity(i);
             }
@@ -923,6 +1010,22 @@ public class FloatingService extends Service {
         mObserver = new ScreenshotObserver(path, mFileHandler);
         mObserver.startWatching();
         Log.e(TAG,"FileObserver started watching");
+
+        /**
+         * 임시구현
+         * 기존 옵저버와 병합필요
+         */
+        Handler mTempHandler = new Handler(Looper.getMainLooper())
+        {
+            @Override
+            public void handleMessage(Message msg)
+            {
+                super.handleMessage(msg);
+            }
+        };
+        ScreenshotObserver mEditObserver = new ScreenshotObserver(Utils.EDIT_PATH,mTempHandler);
+        mEditObserver.startWatching();
+
     }
 
 
@@ -1050,6 +1153,7 @@ public class FloatingService extends Service {
         mImageReader.close();
         // 파일옵저버 정지
         mObserver.stopWatching();
+        mEditObserver.stopWatching();
     }
 
     public static boolean isServiceActive() {

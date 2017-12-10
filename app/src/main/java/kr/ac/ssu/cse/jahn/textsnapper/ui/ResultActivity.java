@@ -23,10 +23,11 @@ import kr.ac.ssu.cse.jahn.textsnapper.ocr.IOCRServiceCallback;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.ImageSource;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.OCRProcessor;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.OCRService;
+import kr.ac.ssu.cse.jahn.textsnapper.util.PrefUtils;
 
-public class TestActivity extends AppCompatActivity
+public class ResultActivity extends AppCompatActivity
 {
-    private final static String TAG = TestActivity.class.getSimpleName();
+    private final static String TAG = ResultActivity.class.getSimpleName();
     protected ImageView mImageView;
     protected EditText mText;
     protected Uri mPhotoUri;
@@ -96,10 +97,10 @@ public class TestActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_test);
+        setContentView(R.layout.activity_result);
 
-        mText = (EditText) findViewById(R.id.editText);
-        mImageView = (ImageView) findViewById(R.id.imageView);
+        mText = (EditText) findViewById(R.id.resultText);
+        mImageView = (ImageView) findViewById(R.id.resultImage);
 
         Intent intent = new Intent(this, OCRService.class);
         //테스트코드
@@ -119,7 +120,7 @@ public class TestActivity extends AppCompatActivity
     protected void start()
     {
         Intent source = getIntent();
-        source.putExtra("lang", "kor");
+        source.putExtra("lang", PrefUtils.getLanguage(this));
         //main action
         try
         {
