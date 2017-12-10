@@ -33,6 +33,7 @@ import java.util.Date;
 public class Utils {
     public final static String TAG = Utils.class.getSimpleName();
     public static final String DATA_PATH = Environment.getExternalStorageDirectory().toString() + "/TextSnapper/";
+    public static final String PHOTO_PATH = DATA_PATH + "Photo/";
     public final static String EXTERNAL_APP_DIRECTORY = "TextSnapper";
     //오버레이 권한 확인
     public static boolean canDrawOverlays(Context context){

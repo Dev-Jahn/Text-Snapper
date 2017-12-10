@@ -31,8 +31,6 @@ import kr.ac.ssu.cse.jahn.textsnapper.ui.db.FileDatabase;
 import kr.ac.ssu.cse.jahn.textsnapper.ui.db.Item;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
-import static android.content.ContentValues.TAG;
-
 /**
  * Created by ArchSlave on 2017-11-16.
  */
@@ -126,13 +124,13 @@ public class RecentFilesFragment extends Fragment {
             {
                 Intent i = new Intent();
                 i.setComponent(new ComponentName(context.getPackageName(),context.getPackageName()+".TestActivity"));
-                Log.e(TAG, "파일생성 감지: "+msg.getData().getString("path"));
+                Log.e("DEBUG8", "파일생성 감지: "+msg.getData().getString("path"));
                 updateAdapterList();
                 adapter.notifyDataSetChanged();
                 //startActivity(i);
             }
         };
-        observer = new ScreenshotObserver(Utils.DATA_PATH, handler);
+        observer = new ScreenshotObserver(Utils.PHOTO_PATH, handler);
         observer.startWatching();
 
         updateAdapterList();
@@ -141,13 +139,12 @@ public class RecentFilesFragment extends Fragment {
     }
 
     public void updateAdapterList() {
-        File curDir = new File(Utils.DATA_PATH);
+        File curDir = new File(Utils.PHOTO_PATH);
         mList.clear();
         File[] curFiles = curDir.listFiles();
 
         try {
             for (File curFile : curFiles) {
-                Log.d("FileIO", curFile.getAbsolutePath());
                 Date lastModDate = new Date(curFile.lastModified());
                 DateFormat formatter = DateFormat.getDateTimeInstance();
                 String modDate = formatter.format(lastModDate);
@@ -177,7 +174,6 @@ public class RecentFilesFragment extends Fragment {
         updateAdapterList();
         adapter.notifyDataSetChanged();
     }
-
     /**
      * 주의! Fragment 상호 교류를 위해 어쩔 수 없이 채택한 코드
      * Fragment 외 호출 금지

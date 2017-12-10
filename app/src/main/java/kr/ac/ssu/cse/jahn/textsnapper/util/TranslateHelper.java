@@ -77,7 +77,7 @@ public class TranslateHelper extends Thread {
         this.originalText = originalText;
     }
 
-    public static String getResultText() {
+    public String getResultText() {
         return resultText;
     }
 
@@ -107,9 +107,12 @@ public class TranslateHelper extends Thread {
 
             int responseCode = con.getResponseCode();
             BufferedReader br;
-            if (responseCode == 200) { // 정상 호출
+            // 정상 호출
+            if (responseCode == 200) {
                 br = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            } else {  // 에러 발생
+            }
+            // 에러 발생
+            else {
                 br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
             }
             String inputLine;
@@ -139,6 +142,9 @@ public class TranslateHelper extends Thread {
 
     }
 
+    /**
+     * Json 형태로 Parsing
+     */
     public static String parse(String serverResponse) {
         JsonElement jelement = new JsonParser().parse(serverResponse);
         JsonObject jobject = jelement.getAsJsonObject();

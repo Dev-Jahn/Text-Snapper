@@ -40,6 +40,7 @@ import java.util.Date;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
 import kr.ac.ssu.cse.jahn.textsnapper.ocr.ImageSource;
+import kr.ac.ssu.cse.jahn.textsnapper.util.PrefUtils;
 import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
 import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.DATA_PATH;
@@ -215,18 +216,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         @Override
         public void onClick(View v) {
-            SharedPreferences pref = getPreferences(MODE_PRIVATE);
-            boolean canStart = pref.getBoolean("floatingButtonUse", true);
-            if(canStart) {
-                if (Utils.canDrawOverlays(MainActivity.this)) {
-                    if (FloatingService.isServiceActive() == false)
-                        // 시작
-                        startFloatingHead();
-                } else {
-                    requestPermission(REQUEST_PERMISSION_OVERLAY);
-                }
+            if (Utils.canDrawOverlays(MainActivity.this)) {
+                if(PrefUtils.isAvailable(getApplicationContext()))
+                    startFloatingHead();
+                else
+                    Toast.makeText(getApplicationContext(), "FloatingButton 옵션이 비활성화되어 있습니다.", Toast.LENGTH_LONG).show();
             } else {
-                Toast.makeText(getApplicationContext(), "Floating Button Option이 비활성화되어 있습니다.", Toast.LENGTH_LONG).show();
+                requestPermission(REQUEST_PERMISSION_OVERLAY);
             }
         }
     };
@@ -318,12 +314,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void startFloatingHead() {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean canUseFloating = pref.getBoolean("floatingButtonUse", true);
+        boolean isAvailable = PrefUtils.isAvailable(getApplicationContext());
         /**
          * 서비스가 버튼을 클릭할 때 마다 실행되는 문제 해결
          */
-        if(!FloatingService.isServiceActive() && canUseFloating) {
+        if(!FloatingService.isServiceActive() && isAvailable) {
             Intent intent = new Intent(getApplicationContext(), FloatingService.class);
             intent.putExtra("projection", mProjectionIntent);
             startService(intent);
@@ -331,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         /**
          * Option 연동
          */
-        if(!canUseFloating) {
+        if(!isAvailable) {
             Toast.makeText(getApplicationContext(), "FloatingButton 옵션이 비활성화되어 있습니다.", Toast.LENGTH_LONG).show();
         }
     }
