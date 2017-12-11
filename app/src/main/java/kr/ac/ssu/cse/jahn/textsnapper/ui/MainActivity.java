@@ -491,4 +491,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.setCancelable(true);
         builder.show();
     }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (FloatingService.isServiceActive()) {
+            Intent stopIntent = FloatingService.getCurrentFloatingService();
+            stopService(stopIntent);
+        }
+    }
 }

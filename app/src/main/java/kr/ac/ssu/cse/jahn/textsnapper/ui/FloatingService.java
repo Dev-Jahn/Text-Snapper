@@ -409,7 +409,7 @@ public class FloatingService extends Service {
 
                             int diffX = currentX - initX;
                             int diffY = currentY - initY;
-/*
+
                             // X, Y 이동값이 적은 경우는 FloatingBar를 띄우는 액션으로 본다
                             if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5) {
                                 endTime = System.currentTimeMillis();
@@ -421,11 +421,11 @@ public class FloatingService extends Service {
 
 /**
  * 개발중인 기능 Test Code
- */
+
 
     attachTop();
     showResult();
-
+*/
 
 
                             afterY = marginY + diffY;
