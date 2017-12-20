@@ -70,6 +70,7 @@ public class Utils {
     public static final String DATA_PATH = APP_PATH + "tessdata/";
     public static final String CAMERA_PATH = APP_PATH + "camera/";
     public static final String EDIT_PATH = APP_PATH + "edit/";
+    public static final String TXT_PATH = APP_PATH + "result/";
 
 
     public final static String EXTERNAL_APP_DIRECTORY = "TextSnapper";
@@ -148,7 +149,8 @@ public class Utils {
                 APP_PATH,
                 DATA_PATH,
                 CAMERA_PATH,
-                EDIT_PATH
+                EDIT_PATH,
+                TXT_PATH
         };
         for (String path : paths)
         {
@@ -319,6 +321,12 @@ public class Utils {
             cursor.close();
         }
         return result;
+    }
+
+    public static String convertPathToTxt(String original) {
+        int begin = original.lastIndexOf("/")+1;
+        int last = original.lastIndexOf(".");
+        return Utils.TXT_PATH.concat(original.substring(begin, last).concat(".txt"));
     }
 
     public static void startCamera(Activity activity) {

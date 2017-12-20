@@ -22,7 +22,7 @@
         />
 
     <EditText
-        android:id="@+id/editText"
+        android:id="@+id/mText"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginBottom="10dp"

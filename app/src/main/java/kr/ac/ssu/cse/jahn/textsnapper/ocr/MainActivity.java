@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test);
 
-        mText = (EditText) findViewById(R.id.editText);
+        mText = (EditText) findViewById(R.id.mText);
         mImageView = (ImageView)findViewById(R.id.imageView);
         //mButtonGallery = (Button) findViewById(R.id.gallery);
         mButtonGallery.setOnClickListener(new ButtonClickHandler());

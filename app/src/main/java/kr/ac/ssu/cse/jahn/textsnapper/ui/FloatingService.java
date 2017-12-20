@@ -434,11 +434,11 @@ public class FloatingService extends Service {
 
 /**
  * 개발중인 기능 Test Code
- */
 
-    //attachTop();
-    //showResult();
 
+    attachTop();
+    showResult();
+*/
 
 
                             afterY = marginY + diffY;

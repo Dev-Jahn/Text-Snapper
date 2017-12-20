@@ -22,7 +22,7 @@ public class FileDatabase {
     private SQLiteDatabase mDatabase = null;
 
     /**
-     * singleton 패턴으로 구현
+     * singleton 패턴으로 구현했음
      */
     public static FileDatabase getInstance(Context context) {
         if(mFileDatabase == null) {
