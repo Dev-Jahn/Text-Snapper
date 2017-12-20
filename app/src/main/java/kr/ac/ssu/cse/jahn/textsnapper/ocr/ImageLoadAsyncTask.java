@@ -2,16 +2,22 @@ package kr.ac.ssu.cse.jahn.textsnapper.ocr;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.googlecode.leptonica.android.Pix;
-import com.googlecode.leptonica.android.ReadFile;
 import com.googlecode.leptonica.android.Scale;
+import com.squareup.picasso.MemoryPolicy;
+import com.squareup.picasso.Picasso;
 
-import java.io.File;
+import java.io.IOException;
+
+import kr.ac.ssu.cse.jahn.textsnapper.ui.MyApplication;
+
+import static com.googlecode.leptonica.android.ReadFile.readBitmap;
 /*
 import com.googlecode.leptonica.android.Pix;
 import com.googlecode.leptonica.android.ReadFile;
@@ -100,10 +106,30 @@ public class ImageLoadAsyncTask extends AsyncTask<Void, Void, ImageLoadAsyncTask
             Log.i(TAG, "isCancelled");
             return null;
         }
+
         //Picasso라이브러리로 Uri를 읽어 bitmap으로 변환.
         //leptonica로 bitmap을 pix로 변환
-        Pix p;
-        p = ReadFile.readFile(new File(photoUri.getPath()));
+        Pix p=null;
+        try
+        {
+            Thread.sleep(1000);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        try {
+            final Bitmap bmp = Picasso.with(MyApplication.rootActivity).load(photoUri).memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE).get();
+            if (bmp != null) {
+                p = readBitmap(bmp);
+                bmp.recycle();
+            }
+        }
+        catch (IOException ignored) {
+            p = null;
+        }
+
+
+
         if (p == null)
         {
             Log.i(TAG,"could not load image.");

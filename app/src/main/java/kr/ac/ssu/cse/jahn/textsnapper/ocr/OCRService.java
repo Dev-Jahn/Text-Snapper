@@ -1,6 +1,5 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ocr;
 
-import android.app.AlertDialog;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,7 +17,6 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.googlecode.leptonica.android.Pix;
@@ -196,14 +194,15 @@ public class OCRService extends Service
         default:
             textId = R.string.error_could_not_take_photo;
         }
-
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        Toast.makeText(this, "ERROR:"+getString(textId), Toast.LENGTH_SHORT).show();
+        /*
+        AlertDialog.Builder alert = new AlertDialog.Builder(getApplicationContext());
         alert.setTitle(R.string.error_title);
-        final TextView textview = new TextView(this);
+        final TextView textview = new TextView(getApplicationContext());
         textview.setText(textId);
         alert.setView(textview);
         alert.setPositiveButton(android.R.string.ok, positiveListener);
-        alert.show();
+        alert.show();*/
     }
 
     private void preprocess(Bitmap bitmap)

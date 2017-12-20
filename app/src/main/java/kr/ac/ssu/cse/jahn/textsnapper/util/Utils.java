@@ -42,6 +42,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import kr.ac.ssu.cse.jahn.textsnapper.R;
+import kr.ac.ssu.cse.jahn.textsnapper.ui.MyApplication;
 import ly.img.android.sdk.models.config.CropAspectConfig;
 import ly.img.android.sdk.models.config.Divider;
 import ly.img.android.sdk.models.state.CameraSettings;
@@ -55,7 +56,8 @@ import ly.img.android.ui.activities.CameraPreviewBuilder;
 import ly.img.android.ui.activities.PhotoEditorBuilder;
 
 import static kr.ac.ssu.cse.jahn.textsnapper.ui.MainActivity.REQUEST_CAMERA;
-import static kr.ac.ssu.cse.jahn.textsnapper.ui.MainActivity.REQUEST_EDIT;
+import static kr.ac.ssu.cse.jahn.textsnapper.ui.MainActivity.REQUEST_EDIT_FLOAT;
+import static kr.ac.ssu.cse.jahn.textsnapper.ui.MainActivity.REQUEST_EDIT_MAIN;
 
 /**
  * Created by ArchSlave on 2017-11-05.
@@ -224,7 +226,7 @@ public class Utils {
     public static File saveScreenShot(final Bitmap bitmap) {
         final String imageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Screenshots/";
         final String timeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-        final String fileName = "Screenshot_"+timeStamp+".png";
+        final String fileName = "Screenshot_"+timeStamp+".jpg";
         final String imagePath = imageDir+fileName;
         File dir = new File(imageDir);
         if(!dir.exists())
@@ -238,7 +240,7 @@ public class Utils {
                 FileOutputStream fos;
                 try {
                     fos = new FileOutputStream(imagePath);
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
                     fos.flush();
                     fos.close();
                 } catch (FileNotFoundException e) {
@@ -363,9 +365,17 @@ public class Utils {
                 );
 
         customizeConfig(settingsList);
+        if (activity==null)
+        {
+            activity = MyApplication.rootActivity;
+            new PhotoEditorBuilder(activity)
+                    .setSettingsList(settingsList)
+                    .startActivityForResult(activity, REQUEST_EDIT_FLOAT);
+        }
+        else
         new PhotoEditorBuilder(activity)
                 .setSettingsList(settingsList)
-                .startActivityForResult(activity, REQUEST_EDIT);
+                .startActivityForResult(activity, REQUEST_EDIT_MAIN);
     }
 
     public static void customizeConfig(SettingsList settingsList) {
@@ -387,4 +397,6 @@ public class Utils {
                 adjustTool
         ).setAspects(CropAspectConfig.FREE_CROP);
     }
+
+
 }

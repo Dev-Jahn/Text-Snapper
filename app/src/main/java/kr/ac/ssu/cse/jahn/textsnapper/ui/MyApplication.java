@@ -1,5 +1,6 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ui;
 
+import android.app.Activity;
 import android.app.Application;
 
 import ly.img.android.PESDK;
@@ -10,6 +11,8 @@ import ly.img.android.PESDK;
 
 public class MyApplication extends Application
 {
+    public static Activity rootActivity;
+
     @Override
     public void onCreate()
     {

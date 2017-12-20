@@ -221,6 +221,7 @@ public class ResultActivity extends AppCompatActivity
     protected void start()
     {
         Intent source = getIntent();
+        Log.e(TAG,"Uri: "+source.getData());
         source.putExtra("lang", PrefUtils.getLanguage(this));
         //main action
         try

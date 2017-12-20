@@ -1,7 +1,6 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ui;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -52,9 +51,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static int statusbarHeight;
     public static final int REQUEST_CAMERA = 100;
     public static final int REQUEST_GALLERY = 101;
-    public static final int REQUEST_EDIT = 102;
-    public static final int REQUEST_MEDIA_PROJECTION = 103;
-    public static final int REQUEST_PERMISSION_OVERLAY = 104;
+    public static final int REQUEST_EDIT_FLOAT = 102;
+    public static final int REQUEST_EDIT_MAIN = 103;
+    public static final int REQUEST_MEDIA_PROJECTION = 104;
+    public static final int REQUEST_PERMISSION_OVERLAY = 105;
 
     // Floating Action Button Overlay를 위한 요청 코드
     private static final String TAG = "Mainactivity";
@@ -72,7 +72,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected int mHeight;
     private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC;
     protected static boolean isForeground = false;
-    public static Activity mActivity;
 
     ActionBarDrawerToggle toggle;
     ViewPager viewPager;
@@ -80,8 +79,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        mActivity = this;
         super.onCreate(savedInstanceState);
+        MyApplication.rootActivity=this;
         setContentView(R.layout.activity_main);
         //상단바 높이 저장
         statusbarHeight = Utils.getStatusBarHeight(getResources());
@@ -157,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startGallery();
                 break;
             case R.id.imageCamera:
-                Utils.startCamera(mActivity);
+                Utils.startCamera(MainActivity.this);
                 break;
             }
         }
@@ -195,10 +194,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 data.putExtra("resultcode", resultCode);
                 break;
             case REQUEST_GALLERY:
-                startEditor(Utils.getRealPathFromUri(this, photoUri),mActivity);
+                startEditor(Utils.getRealPathFromUri(this, photoUri),this);
                 break;
             case REQUEST_CAMERA:
-            case REQUEST_EDIT:
+            case REQUEST_EDIT_MAIN:
                 String resultPath =
                         data.getStringExtra(ImgLyIntent.RESULT_IMAGE_PATH);
                 String sourcePath =

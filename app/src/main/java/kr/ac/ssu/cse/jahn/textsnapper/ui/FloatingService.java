@@ -4,9 +4,11 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -20,7 +22,6 @@ import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.CountDownTimer;
-import android.os.Environment;
 import android.os.FileObserver;
 import android.os.Handler;
 import android.os.IBinder;
@@ -62,6 +63,7 @@ import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 import static android.content.ContentValues.TAG;
 import static android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN;
 import static android.view.WindowManager.LayoutParams.TYPE_PHONE;
+import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.EDIT_PATH;
 import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.capture;
 import static kr.ac.ssu.cse.jahn.textsnapper.util.Utils.createVirtualDisplay;
 
@@ -79,7 +81,8 @@ public class FloatingService extends Service {
     private static boolean isResultPopup;
 
     protected FileObserver mObserver;
-    protected FileObserver mEditObserver;
+    final static String ACTION_SCREENSHOT = FloatingService.class.getName()+".screenshot.captured";
+    private boolean mReceiverRegistered;
     private Handler mFileHandler;
     protected MediaProjectionManager mProjectionManager;
     protected MediaProjection mProjection;
@@ -103,7 +106,7 @@ public class FloatingService extends Service {
     protected String mResultString;
     protected Uri uriForOCR;
     protected ImageView mResultImage;
-    private boolean _binded = false;
+    private boolean mBinded = false;
 
 
     // 접근 금지!!
@@ -116,7 +119,7 @@ public class FloatingService extends Service {
         {
             Log.e(TAG, "Service Connected");
             mBinder = IOCRService.Stub.asInterface(service);
-            _binded = true;
+            mBinded = true;
         }
 
         @Override
@@ -124,7 +127,7 @@ public class FloatingService extends Service {
         {
             Log.e(TAG, "Service disconnected");
             mBinder = null;
-            _binded = false;
+            mBinded = false;
         }
     };
 
@@ -151,6 +154,7 @@ public class FloatingService extends Service {
                 break;
             case OCRProcessor.MESSAGE_UTF8_TEXT:
                 mResultString = (String) msg.obj;
+                Log.e(TAG,"스트링");
                 break;
             case OCRProcessor.MESSAGE_END:
                 attachTop();
@@ -169,6 +173,7 @@ public class FloatingService extends Service {
     protected void startOCR()
     {
         Intent source = new Intent();
+        Log.e(TAG,"Uri: "+uriForOCR);
         source.setData(uriForOCR);
         source.putExtra("lang", PrefUtils.getLanguage(this));
         //main action
@@ -577,7 +582,7 @@ public class FloatingService extends Service {
             ImageView save = (ImageView) resultLayout.findViewById(R.id.save);
             final ImageView translate = (ImageView) resultLayout.findViewById(R.id.translate);
             ImageView cancel = (ImageView) resultLayout.findViewById(R.id.cancel);
-            final EditText editText = (EditText) resultLayout.findViewById(R.id.editText);
+            final EditText editText = (EditText) resultLayout.findViewById(R.id.mText);
 
             /**
              * View 위치 설정 및 추가
@@ -947,7 +952,10 @@ public class FloatingService extends Service {
                 Runnable shot = new Runnable() {
                     @Override
                     public void run() {
-                        Utils.saveScreenShot(capture(mImageReader, windowManager.getDefaultDisplay()));
+                        File captured = Utils.saveScreenShot(capture(mImageReader, windowManager.getDefaultDisplay()));
+                        Intent brodcastIntent = new Intent(ACTION_SCREENSHOT);
+                        brodcastIntent.putExtra("path",Uri.fromFile(captured).getPath());
+                        sendBroadcast(brodcastIntent);
                     }
                 };
                 handler.postDelayed(shot, 100);
@@ -1003,50 +1011,75 @@ public class FloatingService extends Service {
     }
 
     /**
-     * 스크린샷으로 저장소에 파일이 생성되는 것을 감지하는 FileObserver를 시작
+     * 스크린샷편집후 또는 크롭완료를 감지하는 파일옵저버
      */
     private void setFileObserver()
     {
-        mFileHandler = new Handler(Looper.getMainLooper())
+        Handler fileHandler = new Handler(Looper.getMainLooper())
         {
             @Override
             public void handleMessage(Message msg)
             {
-                Intent i = new Intent();
-                Utils.startEditor(msg.getData().getString("path"),MainActivity.mActivity);
-                Log.e(TAG, "파일생성 감지: "+msg.getData().getString("path"));
-                //startActivity(i);
-            }
-        };
-        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Screenshots/";
-
-        mObserver = new ScreenshotObserver(path, mFileHandler);
-        mObserver.startWatching();
-        Log.e(TAG,"FileObserver started watching");
-
-        /**
-         * 스크린샷편집후 또는 크롭완료를 감지
-         * 임시구현
-         * 기존 옵저버와 병합필요
-         */
-        Handler mTempHandler = new Handler(Looper.getMainLooper())
-        {
-            @Override
-            public void handleMessage(Message msg)
-            {
+                String path = EDIT_PATH+msg.getData().getString("path");
+                Log.e(TAG, path);
+                int state = msg.getData().getInt("state");
                 if (!MainActivity.isForeground)
                 {
-                    uriForOCR = Uri.fromFile(new File(msg.getData().getString("path")));
+                    Log.e(TAG, "Floating Button Functions");
+                    uriForOCR = Uri.fromFile(new File(path));
                     startOCR();
                 }
+                else
+                    Log.e(TAG, "Mainactivity Functions");
+                Log.e(TAG, "파일생성 감지: "+path);
             }
         };
-        ScreenshotObserver mEditObserver = new ScreenshotObserver(Utils.EDIT_PATH,mTempHandler);
-        mEditObserver.startWatching();
-
+        mObserver = new ScreenshotObserver(Utils.EDIT_PATH, fileHandler);
+        mObserver.startWatching();
+        Log.e(TAG,"FileObserver started watching");
     }
 
+    /**
+     * 스크린샷 촬영에 대한 브로드 캐스드를 수신할 동적 브로드캐스트 리시버
+     */
+    private BroadcastReceiver fileCreatedReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            if (mReceiverRegistered)
+            {
+                if (intent.getAction().equalsIgnoreCase(ACTION_SCREENSHOT))
+                {
+                    String path = intent.getStringExtra("path");
+                    Log.e(TAG, "onReceive: " + "Screenshot Path =  "+path);
+                    Utils.startEditor(path, null);
+                }
+            }
+        }
+    };
 
+    private synchronized void unRegisterfileCreatedReceiver()
+    {
+        if (mReceiverRegistered)
+        {
+            Log.e(TAG, "unRegisterfileCreatedReceiver " + fileCreatedReceiver);
+            unregisterReceiver(fileCreatedReceiver);
+            mReceiverRegistered = false;
+        }
+    }
+
+    private synchronized void registerfileCreatedReceiver()
+    {
+        if (!mReceiverRegistered)
+        {
+            Log.e(TAG, "registerfileCreatedReceiver " + fileCreatedReceiver);
+            final IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(ACTION_SCREENSHOT);
+            registerReceiver(fileCreatedReceiver,intentFilter);
+            mReceiverRegistered = true;
+        }
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -1065,6 +1098,8 @@ public class FloatingService extends Service {
             startForeground(FOREGROUND_ID, notification);
             //파일옵저버 시작
             setFileObserver();
+            //브로드캐스트 리시버 등록
+            registerfileCreatedReceiver();
             //미디어프로젝션 권한요청 및 초기화
             final Intent pIntent = intent.getParcelableExtra("projection");
             final int resultCode = pIntent.getIntExtra("resultcode",0);
@@ -1171,7 +1206,8 @@ public class FloatingService extends Service {
         mImageReader.close();
         // 파일옵저버 정지
         mObserver.stopWatching();
-        mEditObserver.stopWatching();
+        //브로드캐스트 리시버 등록해제
+        unRegisterfileCreatedReceiver();
         //OCR서비스 언바인드
         unbindService(mConnection);
 
