@@ -10,7 +10,6 @@ import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -252,8 +251,8 @@ public class CropView extends View
         @Override
         public boolean onTouch(View v, MotionEvent event)
         {
-            Log.e(TAG, String.valueOf(((CropDot)v).index)+"번 꼭지점 터치");
-            Log.e(TAG, " ");
+            //Log.e(TAG, String.valueOf(((CropDot)v).index)+"번 꼭지점 터치");
+            //Log.e(TAG, " ");
             switch (event.getAction())
             {
             case MotionEvent.ACTION_DOWN:

@@ -206,10 +206,10 @@ public class ResultActivity extends AppCompatActivity
         Intent intent = new Intent(this, OCRService.class);
         //테스트코드
         Log.e(TAG, "Activity started");
-        Uri screenshotUri = getIntent().getData();//getParcelableExtra("screenshot");
+        final Uri screenshotUri = getIntent().getData();//getParcelableExtra("screenshot");
         if (screenshotUri!=null)
         {
-            Picasso.with(this).load(screenshotUri).into(mImageView);
+            Picasso.with(ResultActivity.this).load(screenshotUri).into(mImageView);
             Log.e(TAG,"image loaded");
         }
         else

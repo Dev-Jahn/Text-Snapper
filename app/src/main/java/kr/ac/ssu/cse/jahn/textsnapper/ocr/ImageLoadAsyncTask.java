@@ -112,7 +112,7 @@ public class ImageLoadAsyncTask extends AsyncTask<Void, Void, ImageLoadAsyncTask
         Pix p=null;
         try
         {
-            Thread.sleep(1000);
+            Thread.sleep(100);
         } catch (InterruptedException e)
         {
             e.printStackTrace();

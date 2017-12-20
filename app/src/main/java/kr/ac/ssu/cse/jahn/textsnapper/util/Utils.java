@@ -222,12 +222,16 @@ public class Utils {
             return tessDir;
         }
     }
-
-    public static File saveScreenShot(final Bitmap bitmap) {
+    public static File saveScreenShot(final Bitmap bitmap, String path) {
         final String imageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Screenshots/";
         final String timeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
         final String fileName = "Screenshot_"+timeStamp+".jpg";
-        final String imagePath = imageDir+fileName;
+        final String imagePath;
+        if (path!=null)
+            imagePath = path+"cropped_"+timeStamp+".jpg";
+        else
+            imagePath = imageDir+fileName;
+
         File dir = new File(imageDir);
         if(!dir.exists())
             dir.mkdirs();
@@ -332,6 +336,7 @@ public class Utils {
     }
 
     public static void startCamera(Activity activity) {
+        final String timeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
         Log.e("TAG", "Start Camera");
         SettingsList settingsList = new SettingsList();
         settingsList
@@ -339,10 +344,12 @@ public class Utils {
                 .getSettingsModel(CameraSettings.class)
                 .setExportDir(Utils.CAMERA_PATH)
                 .setExportPrefix("camera_")
+                .setOutputFilePath(timeStamp)
                 // Set custom editor export settings
                 .getSettingsModel(EditorSaveSettings.class)
                 .setExportDir(Utils.EDIT_PATH)
-                .setExportPrefix("result_")
+                .setExportPrefix("edited_")
+                .setOutputFilePath(timeStamp)
                 .setSavePolicy(
                         EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT
                 );
@@ -368,6 +375,10 @@ public class Utils {
         if (activity==null)
         {
             activity = MyApplication.rootActivity;
+            /*Intent i = new Intent();
+            i.setClass(MyApplication.rootActivity, MainActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            Img*/
             new PhotoEditorBuilder(activity)
                     .setSettingsList(settingsList)
                     .startActivityForResult(activity, REQUEST_EDIT_FLOAT);
@@ -397,6 +408,5 @@ public class Utils {
                 adjustTool
         ).setAspects(CropAspectConfig.FREE_CROP);
     }
-
 
 }

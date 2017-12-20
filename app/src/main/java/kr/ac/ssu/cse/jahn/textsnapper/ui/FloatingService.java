@@ -12,8 +12,10 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.graphics.RectF;
 import android.media.AudioAttributes;
 import android.media.ImageReader;
 import android.media.SoundPool;
@@ -43,6 +45,8 @@ import android.widget.Toast;
 
 import com.googlecode.leptonica.android.Pix;
 import com.googlecode.leptonica.android.WriteFile;
+import com.squareup.picasso.MemoryPolicy;
+import com.squareup.picasso.Picasso;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -82,8 +86,8 @@ public class FloatingService extends Service {
 
     protected FileObserver mObserver;
     final static String ACTION_SCREENSHOT = FloatingService.class.getName()+".screenshot.captured";
+    final static String ACTION_CROP = FloatingService.class.getName()+".cropped";
     private boolean mReceiverRegistered;
-    private Handler mFileHandler;
     protected MediaProjectionManager mProjectionManager;
     protected MediaProjection mProjection;
     protected ImageReader mImageReader;
@@ -105,7 +109,7 @@ public class FloatingService extends Service {
     protected Pix mFinalPix;
     protected String mResultString;
     protected Uri uriForOCR;
-    protected ImageView mResultImage;
+    protected Bitmap mResultBitmap;
     private boolean mBinded = false;
 
 
@@ -149,12 +153,12 @@ public class FloatingService extends Service {
                 if (nativePix != 0)
                 {
                     mFinalPix = new Pix(nativePix);
-                    mResultImage.setImageBitmap(WriteFile.writeBitmap(mFinalPix));
+                    mResultBitmap = WriteFile.writeBitmap(mFinalPix);
                 }
                 break;
             case OCRProcessor.MESSAGE_UTF8_TEXT:
                 mResultString = (String) msg.obj;
-                Log.e(TAG,"스트링");
+                Log.e(TAG,"스트링"+mResultString);
                 break;
             case OCRProcessor.MESSAGE_END:
                 attachTop();
@@ -195,11 +199,12 @@ public class FloatingService extends Service {
         super.onCreate();
     }
 
-    private void handleStart() {
+    private void handleStart()
+    {
         /**
          * OCR서비스 바인딩
          */
-        bindService(new Intent(this, OCRService.class),mConnection,BIND_AUTO_CREATE);
+        bindService(new Intent(this, OCRService.class), mConnection, BIND_AUTO_CREATE);
 
         /**
          * WindowManager로 Floating Head 관리
@@ -266,7 +271,8 @@ public class FloatingService extends Service {
         floatingParams.y = (int) (windowSize.y * 0.75);
         windowManager.addView(floatingHead, floatingParams);
 
-        floatingHead.setOnTouchListener(new View.OnTouchListener() {
+        floatingHead.setOnTouchListener(new View.OnTouchListener()
+        {
             long startTime = 0;
             long endTime = 0;
             boolean isLongClick = false;
@@ -277,11 +283,14 @@ public class FloatingService extends Service {
             int marginY;
             int removeImageWidth;
             int removeImageHeight;
+
             //Handler
             Handler longHandler = new Handler();
-            Runnable longRunnable = new Runnable() {
+            Runnable longRunnable = new Runnable()
+            {
                 @Override
-                public void run() {
+                public void run()
+                {
                     isLongClick = true;
                     removeHead.setVisibility(View.VISIBLE);
                     showFloatingRemove();
@@ -292,7 +301,8 @@ public class FloatingService extends Service {
              * Floating Button Touch Event
              */
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
+            public boolean onTouch(View v, MotionEvent event)
+            {
                 WindowManager.LayoutParams newFloatingParams = (WindowManager.LayoutParams) floatingHead.getLayoutParams();
 
                 int leftMax = -floatingImage.getWidth() / 2;
@@ -311,9 +321,13 @@ public class FloatingService extends Service {
                 // 이동되는 좌표
                 int afterX;
                 int afterY;
-                // floatingHead를 이동할 수 있으면
-                if (!isFixed) {
-                    switch (event.getAction()) {
+                if (!_cropmode)
+                {
+                    // floatingHead를 이동할 수 있으면
+                    if (!isFixed)
+                    {
+                        switch (event.getAction())
+                        {
                         // 롱클릭
                         case MotionEvent.ACTION_DOWN:
                             removeImageWidth = removeImage.getLayoutParams().width;
@@ -339,9 +353,11 @@ public class FloatingService extends Service {
                             int dy = currentY - initY;
 
                             // 만약 floatingBar가 띄워져 있다면 다시 집어넣는다.
-                            if (isBarActive) {
+                            if (isBarActive)
+                            {
                                 showFloatingBar();
-                                if(!removeHandlerPosted) {
+                                if (!removeHandlerPosted)
+                                {
                                     longHandler.postDelayed(longRunnable, 300);
                                     removeHandlerPosted = true;
                                 }
@@ -360,14 +376,16 @@ public class FloatingService extends Service {
                                 afterY = bottomMax;
 
                             // 단순히 움직일 뿐만 아니라 삭제할 수 있는 롱클릭 이벤트일 경우
-                            if (isLongClick) {
+                            if (isLongClick)
+                            {
                                 // removeHead의 위치를 수동으로 적어줘야 함. 수정 xxxxx
                                 int removeLeftBound = windowSize.x / 2 - (int) (removeImageWidth * 1.5);
                                 int removeRightBound = windowSize.x / 2 + (int) (removeImageWidth * 1.5);
                                 int removeTopBound = windowSize.y - (int) (removeImageHeight * 1.5);
 
                                 if ((currentX >= removeLeftBound && currentX <= removeRightBound)
-                                        && currentY >= removeTopBound) {
+                                        && currentY >= removeTopBound)
+                                {
                                     isOnRemoveHead = true;
 
                                     int removeX = (int) ((windowSize.x - (removeImageHeight * 1.5)) / 2);
@@ -375,7 +393,8 @@ public class FloatingService extends Service {
 
                                     Log.v("DEBUG!", "RemoveX : " + removeImageHeight + " RemoveY : " + removeImageWidth);
 
-                                    if (removeImage.getLayoutParams().height == removeImageHeight) {
+                                    if (removeImage.getLayoutParams().height == removeImageHeight)
+                                    {
                                         removeImage.getLayoutParams().height = (int) (removeImageHeight * 1.5);
                                         removeImage.getLayoutParams().width = (int) (removeImageWidth * 1.5);
 
@@ -391,7 +410,8 @@ public class FloatingService extends Service {
 
                                     windowManager.updateViewLayout(floatingHead, newFloatingParams);
                                     break;
-                                } else {
+                                } else
+                                {
                                     isOnRemoveHead = false;
                                     removeImage.getLayoutParams().height = removeImageHeight;
                                     removeImage.getLayoutParams().width = removeImageWidth;
@@ -419,7 +439,8 @@ public class FloatingService extends Service {
                             removeImage.getLayoutParams().width = removeImageWidth;
                             longHandler.removeCallbacks(longRunnable);
 
-                            if (isOnRemoveHead) {
+                            if (isOnRemoveHead)
+                            {
                                 stopService(new Intent(FloatingService.this, FloatingService.class));
                                 isOnRemoveHead = false;
                                 break;
@@ -429,21 +450,23 @@ public class FloatingService extends Service {
                             int diffY = currentY - initY;
 
                             // X, Y 이동값이 적은 경우는 FloatingBar를 띄우는 액션으로 본다
-                            if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5) {
+                            if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5)
+                            {
                                 endTime = System.currentTimeMillis();
                                 // 물론 클릭했던 시간이 적은 경우에만
-                                if ((endTime - startTime) < 500) {
+                                if ((endTime - startTime) < 500)
+                                {
                                     showFloatingBar();
                                 }
                             }
 
-/**
- * 개발중인 기능 Test Code
+                            /**
+                             * 개발중인 기능 Test Code
 
 
-    attachTop();
-    showResult();
-*/
+                             attachTop();
+                             showResult();
+                             */
 
 
                             afterY = marginY + diffY;
@@ -457,19 +480,22 @@ public class FloatingService extends Service {
 
 
                             // 만약 X 이동값이 큰 경우, 벽에 붙인다.
-                            if (Math.abs(diffX) >= 5) {
+                            if (Math.abs(diffX) >= 5)
+                            {
                                 attachSide(currentX);
                             }
 
                             isOnRemoveHead = false;
 
                             break;
+                        }
+                        return true;
                     }
-                    return true;
-                }
-                // Floating Head를 이동할 수 없으면
-                else {
-                    switch (event.getAction()) {
+                    // Floating Head를 이동할 수 없으면
+                    else
+                    {
+                        switch (event.getAction())
+                        {
                         case MotionEvent.ACTION_DOWN:
                             removeImageWidth = removeImage.getLayoutParams().width;
                             removeImageHeight = removeImage.getLayoutParams().height;
@@ -477,12 +503,54 @@ public class FloatingService extends Service {
                         case MotionEvent.ACTION_UP:
                             showFloatingBar();
                             break;
+                        }
+                        return true;
                     }
-                    return true;
+                }
+                else
+                    return false;
+            }
+        });
+        floatingHead.setOnClickListener(new View.OnClickListener()
+        {
+            /**
+             * 크롭완료후 클릭시
+             */
+            @Override
+            public void onClick(View v)
+            {
+                Log.e(TAG,"클릭됨");
+                if (_cropmode)
+                {
+                    final RectF cropRect = mCropView.getCurrentRect();
+                    mCropView.collapse();
+                    mSoundPool.play(soundID,1,1,0,0,1.0f);
+                    toggleHide();
+                    Handler handler = new Handler();
+                    Runnable shot = new Runnable() {
+                        @Override
+                        public void run() {
+                            File captured = Utils.saveScreenShot(capture(mImageReader, windowManager.getDefaultDisplay()),null);
+                            Intent broadcastIntent = new Intent(ACTION_CROP);
+                            broadcastIntent.putExtra("path", Uri.fromFile(captured).getPath());
+                            broadcastIntent.putExtra("croprect", cropRect);
+                            sendBroadcast(broadcastIntent);
+                        }
+                    };
+                    handler.postDelayed(shot, 150);
+                    Runnable restore = new Runnable() {
+                        @Override
+                        public void run() {
+                            toggleHide();
+                        }
+                    };
+                    handler.postDelayed(restore, 100);
+                    //showFloatingBar();
                 }
             }
         });
     }
+
 
     /**
      * 상태 표시줄의 높이를 반환
@@ -579,10 +647,14 @@ public class FloatingService extends Service {
              */
             final LinearLayout resultLayout = (LinearLayout) inflater.inflate(R.layout.result_pop_up, null);
             LinearLayout cancelArea = (LinearLayout) resultLayout.findViewById(R.id.cancelArea);
+            final ImageView finalImage = (ImageView) resultLayout.findViewById(R.id.finalimage);
+            Picasso.with(getApplicationContext()).load(uriForOCR).into(finalImage);
+
             ImageView save = (ImageView) resultLayout.findViewById(R.id.save);
             final ImageView translate = (ImageView) resultLayout.findViewById(R.id.translate);
             ImageView cancel = (ImageView) resultLayout.findViewById(R.id.cancel);
             final EditText editText = (EditText) resultLayout.findViewById(R.id.mText);
+            editText.setText(mResultString);
 
             /**
              * View 위치 설정 및 추가
@@ -708,7 +780,7 @@ public class FloatingService extends Service {
      */
     private void showFloatingBar() {
         // floatingBar를 그릴 수 있는 상태이면
-        if (canDrawBar) {
+        if (canDrawBar&&!_cropmode) {
             // 만약 floatingBar를 집어넣어야 하는 상황이면
             if (floatingBar != null && isBarActive) {
                 canDrawBar = false;
@@ -952,7 +1024,7 @@ public class FloatingService extends Service {
                 Runnable shot = new Runnable() {
                     @Override
                     public void run() {
-                        File captured = Utils.saveScreenShot(capture(mImageReader, windowManager.getDefaultDisplay()));
+                        File captured = Utils.saveScreenShot(capture(mImageReader, windowManager.getDefaultDisplay()),null);
                         Intent brodcastIntent = new Intent(ACTION_SCREENSHOT);
                         brodcastIntent.putExtra("path",Uri.fromFile(captured).getPath());
                         sendBroadcast(brodcastIntent);
@@ -963,6 +1035,7 @@ public class FloatingService extends Service {
                     @Override
                     public void run() {
                         toggleHide();
+                        showFloatingBar();
                     }
                 };
                 handler.postDelayed(restore, 100);
@@ -971,6 +1044,7 @@ public class FloatingService extends Service {
             case R.id.floatingCropRight:
                 if (!_cropmode)
                 {
+                    showFloatingBar();
                     _cropmode = true;
                     mCropView = new CropView(thisService, windowSize.x, windowSize.y, windowManager);
                     WindowManager.LayoutParams cropParams = new WindowManager.LayoutParams(
@@ -980,9 +1054,7 @@ public class FloatingService extends Service {
                             FLAG_FULLSCREEN,
                             PixelFormat.RGBA_8888);
                     windowManager.addView(mCropView,cropParams);
-                    showFloatingBar();
                 }
-
                 break;
             }
         }
@@ -1040,20 +1112,66 @@ public class FloatingService extends Service {
     }
 
     /**
-     * 스크린샷 촬영에 대한 브로드 캐스드를 수신할 동적 브로드캐스트 리시버
+     * 스크린샷, 크롭 파일 에 대한 브로드 캐스드를 수신할 동적 브로드캐스트 리시버
      */
     private BroadcastReceiver fileCreatedReceiver = new BroadcastReceiver()
     {
         @Override
-        public void onReceive(Context context, Intent intent)
+        public void onReceive(Context context, final Intent intent)
         {
             if (mReceiverRegistered)
             {
+                /**
+                 * 스크린샷
+                 */
                 if (intent.getAction().equalsIgnoreCase(ACTION_SCREENSHOT))
                 {
                     String path = intent.getStringExtra("path");
                     Log.e(TAG, "onReceive: " + "Screenshot Path =  "+path);
                     Utils.startEditor(path, null);
+                }
+                /**
+                 * 크롭
+                 */
+                else if (intent.getAction().equalsIgnoreCase(ACTION_CROP))
+                {
+                    new Thread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            Bitmap origin = null;
+                            RectF cropRect = intent.getParcelableExtra("croprect");
+                            try
+                            {
+                                Thread.sleep(50);
+                            } catch (InterruptedException e)
+                            {
+                                e.printStackTrace();
+                            }
+                            try
+                            {
+                                origin = Picasso
+                                        .with(getApplicationContext())
+                                        .load(Uri.fromFile(new File(intent.getStringExtra("path"))))
+                                        .memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
+                                        .get();
+                            } catch (IOException e)
+                            {
+                                e.printStackTrace();
+                            }
+                            if (origin!=null)
+                            {
+                                int h = MainActivity.statusbarHeight;
+                                Bitmap cropped = Bitmap.createBitmap(origin, (int)cropRect.left+5, ((int)cropRect.top)+h-10, (int)cropRect.width(), ((int)cropRect.height()));
+                                Log.e(TAG,cropRect.toString());
+                                Utils.saveScreenShot(cropped, EDIT_PATH);
+                            }
+                            else
+                                Log.e(TAG, "Cannot read original Bitmap");
+                        }
+                    }).start();
+
                 }
             }
         }
@@ -1076,6 +1194,7 @@ public class FloatingService extends Service {
             Log.e(TAG, "registerfileCreatedReceiver " + fileCreatedReceiver);
             final IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(ACTION_SCREENSHOT);
+            intentFilter.addAction(ACTION_CROP);
             registerReceiver(fileCreatedReceiver,intentFilter);
             mReceiverRegistered = true;
         }
