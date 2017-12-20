@@ -1163,7 +1163,7 @@ public class FloatingService extends Service {
                             if (origin!=null)
                             {
                                 int h = MainActivity.statusbarHeight;
-                                Bitmap cropped = Bitmap.createBitmap(origin, (int)cropRect.left+5, ((int)cropRect.top)+h-10, (int)cropRect.width(), ((int)cropRect.height()));
+                                Bitmap cropped = Bitmap.createBitmap(origin, (int)cropRect.left+5, ((int)cropRect.top)+10, (int)cropRect.width(), ((int)cropRect.height()));
                                 Log.e(TAG,cropRect.toString());
                                 Utils.saveScreenShot(cropped, EDIT_PATH);
                             }
