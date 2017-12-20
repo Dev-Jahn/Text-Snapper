@@ -4,11 +4,13 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -58,9 +60,12 @@ public class RecentFilesFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Item curItem = mList.get(position);
-                /**
-                 * Activity로 넘기기 바랍니다.
-                 */
+                File curFile = new File(Utils.convertPathToTxt(curItem.getFilePath()));
+                Uri uri = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", curFile);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(uri, "text/*");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(intent);
             }
         });
         mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -78,6 +83,15 @@ public class RecentFilesFragment extends Fragment {
                     public boolean onMenuItemClick(MenuItem item) {
                         FileDatabase database = FileDatabase.getInstance(context);
                         switch (item.getItemId()) {
+                            // 파일 열기
+                            case R.id.select:
+                                File curFile = new File(Utils.convertPathToTxt(curItem.getFilePath()));
+                                Uri uri = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", curFile);
+                                Intent intent = new Intent(Intent.ACTION_VIEW);
+                                intent.setDataAndType(uri, "text/*");
+                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                startActivity(intent);
+                                break;
                             case R.id.setFavoriteMenu:
                                 if(FavoriteFragment.isAlreadyAdded(curItem) == false) {
                                     ContentValues addRowValue = new ContentValues();

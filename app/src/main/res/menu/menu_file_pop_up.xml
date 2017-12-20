@@ -5,6 +5,12 @@
         android:checkableBehavior="single">
 
         <item
+            android:id="@+id/select"
+            android:title="파일 열기"
+            android:checkable="false"
+            />
+
+        <item
             android:id="@+id/setFavoriteMenu"
             android:title="즐겨찾기에 추가"
             android:checkable="false"

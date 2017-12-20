@@ -112,7 +112,6 @@ public class FloatingService extends Service {
     protected Bitmap mResultBitmap;
     private boolean mBinded = false;
 
-
     // 접근 금지!!
     private static FloatingService thisService;
 
@@ -687,14 +686,15 @@ public class FloatingService extends Service {
                      */
                     String text = editText.getText().toString();
 
-                    String path = Utils.DATA_PATH;
-                    String fileName = "";
+                    //String path = Utils.DATA_PATH;
+                    String path = Utils.getRealPathFromUri(getApplicationContext(), uriForOCR);
+                    path = Utils.convertPathToTxt(path);
 
                     BufferedReader br = null;
                     BufferedWriter bw = null;
                     try {
                         br = new BufferedReader(new StringReader(text));
-                        bw = new BufferedWriter(new FileWriter(path + fileName));
+                        bw = new BufferedWriter(new FileWriter(path));
                         String buf;
 
                         while( (buf = br.readLine()) != null ) {

@@ -2,10 +2,12 @@ package kr.ac.ssu.cse.jahn.textsnapper.ui;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.support.v4.content.FileProvider;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -26,6 +28,7 @@ import kr.ac.ssu.cse.jahn.textsnapper.ui.db.FileAdapter;
 import kr.ac.ssu.cse.jahn.textsnapper.ui.db.FileDatabase;
 import kr.ac.ssu.cse.jahn.textsnapper.ui.db.Item;
 import kr.ac.ssu.cse.jahn.textsnapper.util.RenameDialog;
+import kr.ac.ssu.cse.jahn.textsnapper.util.Utils;
 
 /**
  * Created by ArchSlave on 2017-12-07.
@@ -73,6 +76,15 @@ public class FavoriteFragment extends Fragment {
                     public boolean onMenuItemClick(MenuItem item) {
                         final FileDatabase database = FileDatabase.getInstance(context);
                         switch(item.getItemId()) {
+                            // 파일 열기
+                            case R.id.select :
+                                File curFile = new File(Utils.convertPathToTxt(curItem.getFilePath()));
+                                Uri uri = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", curFile);
+                                Intent intent = new Intent(Intent.ACTION_VIEW);
+                                intent.setDataAndType(uri, "text/*");
+                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                startActivity(intent);
+                                break;
                             // 별명 설정
                             case R.id.setTitleMenu :
                                 final RenameDialog mDialog = new RenameDialog(getActivity());

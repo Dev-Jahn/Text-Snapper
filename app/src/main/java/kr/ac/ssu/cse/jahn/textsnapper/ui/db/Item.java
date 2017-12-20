@@ -1,5 +1,9 @@
 package kr.ac.ssu.cse.jahn.textsnapper.ui.db;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.Date;
+
 /**
  * Created by ArchSlave on 2017-12-07.
  */
@@ -29,6 +33,15 @@ public class Item implements Comparable<Item> {
         return fileSize;
     }
 
+    private Date getRawDate() {
+        DateFormat formatter = DateFormat.getDateTimeInstance();
+        try {
+            return formatter.parse(fileDate);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+
     public String getFileDate() {
         return fileDate;
     }
@@ -38,7 +51,7 @@ public class Item implements Comparable<Item> {
     @Override
     public int compareTo(Item item) {
         if(fileName != null) {
-            return fileDate.compareTo(item.getFileDate());
+            return getRawDate().compareTo(item.getRawDate()) * -1;
         } else {
             throw new IllegalArgumentException();
         }
