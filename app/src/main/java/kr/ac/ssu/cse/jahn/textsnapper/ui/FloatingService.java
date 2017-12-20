@@ -435,7 +435,7 @@ public class FloatingService extends Service {
 /**
  * 개발중인 기능 Test Code
 
-
+*
     attachTop();
     showResult();
 */
@@ -577,7 +577,7 @@ public class FloatingService extends Service {
             ImageView save = (ImageView) resultLayout.findViewById(R.id.save);
             final ImageView translate = (ImageView) resultLayout.findViewById(R.id.translate);
             ImageView cancel = (ImageView) resultLayout.findViewById(R.id.cancel);
-            final EditText editText = (EditText) resultLayout.findViewById(R.id.editText);
+            final EditText editText = (EditText) resultLayout.findViewById(R.id.mText);
 
             /**
              * View 위치 설정 및 추가
@@ -1171,7 +1171,7 @@ public class FloatingService extends Service {
         mImageReader.close();
         // 파일옵저버 정지
         mObserver.stopWatching();
-        mEditObserver.stopWatching();
+//        mEditObserver.stopWatching();
         //OCR서비스 언바인드
         unbindService(mConnection);
 
