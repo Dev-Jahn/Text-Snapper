@@ -703,6 +703,8 @@ public class FloatingService extends Service {
                         }
                         bw.flush();
                         Toast.makeText(getApplicationContext(), "저장 성공!", Toast.LENGTH_LONG).show();
+                        windowManager.removeView(resultLayout);
+                        isResultPopup = false;
                     }catch(IOException e) {
                         Toast.makeText(getApplicationContext(), "저장 실패", Toast.LENGTH_LONG).show();
                         Log.d("DEBUG9", e.toString());
@@ -722,6 +724,7 @@ public class FloatingService extends Service {
                 @Override
                 public void onClick(View v) {
                     String currentText = editText.getText().toString();
+                    Log.e(TAG, currentText);
                     if(!isTranslated) {
                         boolean isEng = PrefUtils.isEng(getApplicationContext());
                         final TranslateHelper translateHelper = TranslateHelper.getInstance(isEng, currentText);
@@ -729,7 +732,9 @@ public class FloatingService extends Service {
                         Runnable translateRunnable = new Runnable() {
                             @Override
                             public void run() {
-                                editText.setText(translateHelper.getResultText());
+                                String text = translateHelper.getResultText();
+                                Log.e(TAG, text);
+                                editText.setText(text);
                                 translate.setImageResource(R.drawable.undo);
                                 isTranslated = true;
                             }
@@ -1163,7 +1168,7 @@ public class FloatingService extends Service {
                             if (origin!=null)
                             {
                                 int h = MainActivity.statusbarHeight;
-                                Bitmap cropped = Bitmap.createBitmap(origin, (int)cropRect.left+5, ((int)cropRect.top)+10, (int)cropRect.width(), ((int)cropRect.height()));
+                                Bitmap cropped = Bitmap.createBitmap(origin, (int)cropRect.left+5, ((int)cropRect.top)+h-3, (int)cropRect.width(), ((int)cropRect.height()));
                                 Log.e(TAG,cropRect.toString());
                                 Utils.saveScreenShot(cropped, EDIT_PATH);
                             }

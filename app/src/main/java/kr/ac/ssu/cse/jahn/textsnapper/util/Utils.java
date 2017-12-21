@@ -344,12 +344,11 @@ public class Utils {
                 .getSettingsModel(CameraSettings.class)
                 .setExportDir(Utils.CAMERA_PATH)
                 .setExportPrefix("camera_")
-                .setOutputFilePath(timeStamp)
                 // Set custom editor export settings
                 .getSettingsModel(EditorSaveSettings.class)
                 .setExportDir(Utils.EDIT_PATH)
                 .setExportPrefix("edited_")
-                .setOutputFilePath(timeStamp)
+                //.setOutputFilePath(timeStamp)
                 .setSavePolicy(
                         EditorSaveSettings.SavePolicy.KEEP_SOURCE_AND_CREATE_ALWAYS_OUTPUT
                 );
